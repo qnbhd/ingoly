@@ -7,13 +7,15 @@ import (
 
 type Parser struct {
 	Tokens    []tokenizer.Token
-	variables VarTable
+	variables map[string]float64
 	size      int
 	pos       int
 }
 
 func (ps *Parser) New(tokens []tokenizer.Token) *Parser {
-	return &Parser{Tokens: tokens, variables: VarTable{}, size: len(tokens), pos: 0}
+	VarTable = make(map[string]float64)
+	VarTable["var"] = 3
+	return &Parser{Tokens: tokens, variables: VarTable, size: len(tokens), pos: 0}
 }
 
 func (ps *Parser) Parse() Ast {
@@ -84,6 +86,9 @@ func (ps *Parser) PRIMARY() Node {
 		result := ps.EXPRESSION()
 		ps.match(tokenizer.RPAR)
 		return result
+	}
+	if ps.match(tokenizer.NAME) {
+		return &NameNode{name: current.Lexeme}
 	}
 
 	panic("WTF")

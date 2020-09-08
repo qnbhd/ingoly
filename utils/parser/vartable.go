@@ -1,4 +1,3 @@
 package parser
 
-type VarTable struct {
-}
+var VarTable map[string]float64

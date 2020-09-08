@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-func FloatToString(input_num float64) string {
-	return strconv.FormatFloat(input_num, 'f', 6, 64)
+func FloatToString(inputNum float64) string {
+	return strconv.FormatFloat(inputNum, 'f', 6, 64)
 }
 
 /* Base Node */
@@ -30,7 +30,7 @@ func (nn *NumberNode) Execute() (float64, error) {
 }
 
 func (nn *NumberNode) ToString() string {
-	return "NUMBER_NODE " + FloatToString(nn.value)
+	return "NUMBER (Constant) " + FloatToString(nn.value)
 }
 
 func (nn *NumberNode) getNodesList() []Node {
@@ -73,7 +73,7 @@ func (bn *BinaryNode) Execute() (float64, error) {
 }
 
 func (bn *BinaryNode) ToString() string {
-	return "BINARY_OPERATION '" + string(bn.operation) + "'"
+	return "BINARY_OPERATION (Operation) '" + string(bn.operation) + "'"
 	//return "[" + bn.op1.ToString() + ", " + bn.op2.ToString() +
 	//	", OP:" + string(bn.operation) + "]"
 }
@@ -109,9 +109,36 @@ func (un *UnaryNode) Execute() (float64, error) {
 }
 
 func (un *UnaryNode) ToString() string {
-	return "UNARY_OPERATION '" + string(un.operation) + "'"
+	return "UNARY_OPERATION (Operation) '" + string(un.operation) + "'"
 }
 
 func (un *UnaryNode) getNodesList() []Node {
 	return []Node{un.op1}
+}
+
+////////////////////////////
+
+/* Name Node */
+
+type NameNode struct {
+	name string
+}
+
+func (un *NameNode) New(name string) *NameNode {
+	return &NameNode{name: name}
+}
+
+func (un *NameNode) Execute() (float64, error) {
+	if value, ok := VarTable[un.name]; ok {
+		return value, nil
+	}
+	return 0, errors.New("unknown identifier")
+}
+
+func (nn *NameNode) ToString() string {
+	return "NAME (Identifier) '" + nn.name + "'"
+}
+
+func (nn *NameNode) getNodesList() []Node {
+	return []Node{}
 }

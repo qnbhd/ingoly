@@ -49,7 +49,7 @@ func (lx *Tokenizer) tokenizeNumber() error {
 		buffer.WriteRune(current)
 		current = lx.next()
 
-		if current != '.' && (strings.Index(buffer.String(), ".")) == -1 {
+		if current == '.' && (strings.Index(buffer.String(), ".")) == -1 {
 			buffer.WriteRune(current)
 			current = lx.next()
 		} else if current == '.' && (strings.Index(buffer.String(), ".")) != -1 {
@@ -73,8 +73,20 @@ func (lx *Tokenizer) tokenizeOperator() error {
 	return errors.New("invalid operator")
 }
 
-func (lx *Tokenizer) tokenizeWord() {
+func (lx *Tokenizer) tokenizeWord() error {
+	var builder strings.Builder
+	current := lx.peek(0)
+	for {
+		if !(unicode.IsLetter(current) || unicode.IsDigit(current)) && current != '_' {
+			break
+		}
+		builder.WriteRune(current)
+		current = lx.next()
+	}
 
+	lx.addToken(NAME, builder.String())
+
+	return nil
 }
 
 func tokenOneSym(sym rune) TokenType {
@@ -111,6 +123,9 @@ func (lx *Tokenizer) Tokenize() []Token {
 
 		if unicode.IsDigit(current) {
 			_ = lx.tokenizeNumber()
+		} else if unicode.IsLetter(current) {
+			_ = lx.tokenizeWord()
+
 		} else if strings.Index(PIX, string(current)) != -1 {
 			_ = lx.tokenizeOperator()
 		} else {

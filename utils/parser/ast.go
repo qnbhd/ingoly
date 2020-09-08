@@ -7,7 +7,7 @@ import (
 
 type Ast struct {
 	Tree      []Node
-	variables VarTable
+	variables map[string]float64
 }
 
 func (ast Ast) _printRecursive(currentNode Node, indentLevel int) {
@@ -18,7 +18,7 @@ func (ast Ast) _printRecursive(currentNode Node, indentLevel int) {
 	var builder strings.Builder
 
 	for i := 0; i < indentLevel; i++ {
-		builder.WriteString("  ")
+		builder.WriteString("   ")
 	}
 
 	builder.WriteString("!--> ")

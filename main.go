@@ -8,7 +8,7 @@ import (
 
 func main() {
 	lx := tokenizer.New(
-		`5 + 7 - 6`)
+		`var + 5 - 7 * (6 - 3)`)
 	result := lx.Tokenize()
 	var jp parser.Parser
 	ps := jp.New(result)
