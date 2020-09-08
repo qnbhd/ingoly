@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -156,6 +157,171 @@ func (vn *ValueNode) getNodesList() []Node {
 	return []Node{}
 }
 
-///////////////
+////////////////
 
-/* Using Variable Node */
+/* Binary Node */
+
+type ConditionalNode struct {
+	operation rune
+	op1       Node
+	op2       Node
+}
+
+func (bn *ConditionalNode) New(operation rune, exp1, exp2 Node) *ConditionalNode {
+	return &ConditionalNode{operation: operation, op1: exp1, op2: exp2}
+}
+
+func (bn *ConditionalNode) Execute() (Value, error) {
+	result1, _ := bn.op1.Execute()
+	result2, _ := bn.op2.Execute()
+
+	switch v := result1.(type) {
+
+	case StringValue:
+		string1 := v.AsString()
+		if bn.operation == '>' {
+			res := 0.
+			if string1 > result2.AsString() {
+				res = 1
+			}
+			return &NumberValue{value: res}, nil
+		} else if bn.operation == '<' {
+			res := 0.
+			if string1 > result2.AsString() {
+				res = 1
+			}
+			return &NumberValue{value: res}, nil
+		} else {
+			return &NumberValue{value: 0}, errors.New("undefined operation")
+		}
+
+	case NumberValue:
+		number1 := result1.AsNumber()
+		number2 := result2.AsNumber()
+
+		switch bn.operation {
+		case '=':
+			res := 0.
+			if number1 == number2 {
+				res = 1
+			}
+			return &NumberValue{value: res}, nil
+		case '<':
+			res := 0.
+			if number1 < number2 {
+				res = 1
+			}
+			return &NumberValue{value: res}, nil
+		case '>':
+			res := 0.
+			if number1 > number2 {
+				res = 1
+			}
+			return &NumberValue{value: res}, nil
+		default:
+			return &NumberValue{value: 0}, errors.New("unknown operation")
+		}
+	}
+
+	return &NumberValue{value: 0}, errors.New("unknown bin expression")
+}
+
+func (bn *ConditionalNode) ToString() string {
+	return "CONDITIONAL (Operation) '" + string(bn.operation) + "'"
+	//return "[" + bn.op1.ToString() + ", " + bn.op2.ToString() +
+	//	", OP:" + string(bn.operation) + "]"
+}
+
+func (bn *ConditionalNode) getNodesList() []Node {
+	return []Node{bn.op1, bn.op2}
+}
+
+//////////////////
+
+/* Assignment Node */
+
+type AssignmentNode struct {
+	Variable   string
+	Expression Node
+}
+
+func (as *AssignmentNode) New(variable string, node Node) *AssignmentNode {
+	return &AssignmentNode{Variable: variable, Expression: node}
+}
+
+func (as *AssignmentNode) Execute() (Value, error) {
+	result, ok := as.Expression.Execute()
+	if ok == nil {
+		VarTable[as.Variable] = result
+	}
+	return NumberValue{0}, nil
+}
+
+func (as *AssignmentNode) ToString() string {
+	return "ASSIGNMENT Node (Node) Identifier: '" + as.Variable + "'"
+}
+
+func (as *AssignmentNode) getNodesList() []Node {
+	return []Node{as.Expression}
+}
+
+//////////////////
+
+/* Print Node */
+
+type PrintNode struct {
+	node Node
+}
+
+func (ps *PrintNode) Execute() (Value, error) {
+	result, _ := ps.node.Execute()
+	fmt.Println(result.AsString())
+	return NumberValue{0}, nil
+}
+
+func (ps *PrintNode) ToString() string {
+	return "PRINT OPERATOR (Keyword)"
+}
+
+func (ps *PrintNode) getNodesList() []Node {
+	return []Node{ps.node}
+}
+
+//////////////////
+
+/* If Node */
+
+type IfNode struct {
+	node     Node
+	ifStmt   Node
+	elseStmt Node
+}
+
+func (is *IfNode) Execute() (Value, error) {
+	result, _ := is.node.Execute()
+
+	var err error
+	if result.AsNumber() != 0 {
+		_, err = is.ifStmt.Execute()
+	} else if is.elseStmt != nil {
+		_, err = is.elseStmt.Execute()
+	}
+
+	return NumberValue{0}, err
+}
+
+func (is *IfNode) ToString() string {
+	//result := "IF-ELSE Node (Statement) \n"
+	//result += "   !-->" + is.node.ToString() + "\n"
+	//result += "   !-->" + "IF (Statement)\n"
+	//result += "      !-->" + is.ifStmt.ToString() + "\n"
+	//if is.elseStmt != nil {
+	//	result += "   !-->" + "ELSE (Statement)\n"
+	//	result += "      !-->" + is.elseStmt.ToString() + "\n"
+	//}
+	return "IF ELSE NODE (Statement)"
+}
+
+func (is *IfNode) getNodesList() []Node {
+	return []Node{is.node, is.ifStmt, is.elseStmt}
+}

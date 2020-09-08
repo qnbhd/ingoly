@@ -19,37 +19,75 @@ func (ps *Parser) New(tokens []tokenizer.Token) *Parser {
 }
 
 func (ps *Parser) Parse() Ast {
-	ast := Ast{[]Statement{}, ps.variables}
+	ast := Ast{[]Node{}, ps.variables}
 
 	for !ps.match(tokenizer.EOF) {
-		ast.Tree = append(ast.Tree, ps.STATEMENT())
+		ast.Tree = append(ast.Tree, ps.Node())
 	}
 
 	return ast
 }
 
-func (ps *Parser) STATEMENT() Statement {
+func (ps *Parser) Node() Node {
 	if ps.match(tokenizer.PRINT) {
-		return &PrintStatement{node: ps.EXPRESSION()}
+		return &PrintNode{node: ps.EXPRESSION()}
+	} else if ps.match(tokenizer.IF) {
+		return ps.IfElseBlock()
 	}
-	return ps.ASSIGNSTATEMENT()
+	return ps.ASSIGNNode()
 }
 
-func (ps *Parser) ASSIGNSTATEMENT() Statement {
+func (ps *Parser) ASSIGNNode() Node {
 	current := ps.get(0)
 
 	if ps.match(tokenizer.NAME) && ps.get(0).Type == tokenizer.EQUAL {
 		variable := current.Lexeme
 		_, ok := ps.consume(tokenizer.EQUAL)
 		if ok == nil {
-			return &AssignmentStatement{Variable: variable, Expression: ps.EXPRESSION()}
+			return &AssignmentNode{Variable: variable, Expression: ps.EXPRESSION()}
 		}
 	}
 	panic("Eq err")
 }
 
+func (ps *Parser) IfElseBlock() Node {
+	condition := ps.EXPRESSION()
+	ifStmt := ps.Node()
+	ps.consume(tokenizer.COLON)
+	var elseStmt Node
+	if ps.match(tokenizer.ELSE) {
+		ps.consume(tokenizer.COLON)
+		elseStmt = ps.Node()
+	} else {
+		elseStmt = nil
+	}
+	return &IfNode{condition, ifStmt, elseStmt}
+}
+
 func (ps *Parser) EXPRESSION() Node {
-	return ps.ADDITIVE()
+	return ps.Conditional()
+}
+
+func (ps *Parser) Conditional() Node {
+	result := ps.ADDITIVE()
+
+	for {
+		if ps.match(tokenizer.LESS) {
+			result = &ConditionalNode{'<', result, ps.ADDITIVE()}
+			continue
+		}
+		if ps.match(tokenizer.GREATER) {
+			result = &ConditionalNode{'>', result, ps.ADDITIVE()}
+			continue
+		}
+		if ps.match(tokenizer.EQUAL) {
+			result = &ConditionalNode{'=', result, ps.ADDITIVE()}
+			continue
+		}
+		break
+	}
+
+	return result
 }
 
 func (ps *Parser) ADDITIVE() Node {

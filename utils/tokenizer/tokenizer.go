@@ -4,19 +4,18 @@ import (
 	"errors"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 )
 
-const PIX = "+-*/="
+const PIX = "+-*/=<>"
 
 type Tokenizer struct {
-	Input  string
+	Input  []rune
 	tokens []Token
 	pos    int
 }
 
 func New(input string) *Tokenizer {
-	return &Tokenizer{Input: input, tokens: []Token{}, pos: 0}
+	return &Tokenizer{Input: []rune(input), tokens: []Token{}, pos: 0}
 }
 
 func (lx *Tokenizer) addToken(tokenType TokenType, lexeme string) {
@@ -24,15 +23,15 @@ func (lx *Tokenizer) addToken(tokenType TokenType, lexeme string) {
 }
 
 func (lx Tokenizer) Length() int {
-	return utf8.RuneCountInString(lx.Input)
+	return len(lx.Input)
 }
 
 func (lx *Tokenizer) peek(relativePosition int) rune {
 	pos := lx.pos + relativePosition
 	if pos >= lx.Length() {
-		return rune(`\0`[0])
+		return 0
 	}
-	result, _ := utf8.DecodeRuneInString(string(lx.Input[pos]))
+	result := lx.Input[pos]
 	return result
 }
 
@@ -85,12 +84,16 @@ func (lx *Tokenizer) tokenizeWord() error {
 	}
 
 	word := builder.String()
-	if word == "print" {
+	switch word {
+	case "print":
 		lx.addToken(PRINT, "")
-	} else {
+	case "if":
+		lx.addToken(IF, "")
+	case "else":
+		lx.addToken(ELSE, "")
+	default:
 		lx.addToken(NAME, builder.String())
 	}
-
 	return nil
 }
 
@@ -110,6 +113,12 @@ func tokenOneSym(sym rune) TokenType {
 		return RPAR
 	case '=':
 		return EQUAL
+	case '>':
+		return GREATER
+	case '<':
+		return LESS
+	case ':':
+		return COLON
 	}
 	return NIL
 }

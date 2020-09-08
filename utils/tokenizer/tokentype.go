@@ -62,6 +62,10 @@ const (
 
 	COMMENT
 	PRINT
+	IF
+	ELSE
+	FOR
+	WHILE
 )
 
 func (tt TokenType) String() string {
@@ -77,5 +81,6 @@ func (tt TokenType) String() string {
 		"PERCENTEQUA", "AMPEREQUAL", "VBAREQUAL", "CIRCUMFLEXEQUAL",
 		"LEFTSHIFTEQUAL", "RIGHTSHIFTEQUAL", "DOUBLESTAREQUAL",
 		"DOUBLESLASH", "DOUBLESLASHEQUAL", "AT", "ATEQUAL",
-		"RARROW", "ELLIPSIS", "COLONEQUAL", "COMMENT", "PRINT"}[tt]
+		"RARROW", "ELLIPSIS", "COLONEQUAL", "COMMENT", "PRINT", "IF",
+		"ELSE", "FOR", "WHILE"}[tt]
 }

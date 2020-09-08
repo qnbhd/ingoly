@@ -6,33 +6,11 @@ import (
 )
 
 type Ast struct {
-	Tree      []Statement
+	Tree      []Node
 	variables map[string]Value
 }
 
-func (ast Ast) _printRecursiveStatement(currentStatement Statement, indentLevel int) {
-	if currentStatement == nil {
-		return
-	}
-
-	var builder strings.Builder
-
-	for i := 0; i < indentLevel; i++ {
-		builder.WriteString("   ")
-	}
-
-	builder.WriteString("!--> ")
-	builder.WriteString(currentStatement.ToString())
-	builder.WriteString(" ")
-
-	fmt.Println(builder.String())
-
-	for _, node := range currentStatement.getNodesList() {
-		ast._printRecursiveNode(node, indentLevel+1)
-	}
-}
-
-func (ast Ast) _printRecursiveNode(currentNode Node, indentLevel int) {
+func (ast Ast) _printRecursiveStatement(currentNode Node, indentLevel int) {
 	if currentNode == nil {
 		return
 	}
@@ -45,12 +23,11 @@ func (ast Ast) _printRecursiveNode(currentNode Node, indentLevel int) {
 
 	builder.WriteString("!--> ")
 	builder.WriteString(currentNode.ToString())
-	builder.WriteString(" ")
 
 	fmt.Println(builder.String())
 
-	for _, node := range currentNode.getNodesList() {
-		ast._printRecursiveNode(node, indentLevel+1)
+	for _, stmt := range currentNode.getNodesList() {
+		ast._printRecursiveStatement(stmt, indentLevel+1)
 	}
 }
 

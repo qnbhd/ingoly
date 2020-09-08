@@ -22,8 +22,8 @@ func main() {
 	ast.PrintRecursive()
 
 	for line, instruction := range ast.Tree {
-		ok := instruction.Execute()
-		if ok == nil {
+		_, err := instruction.Execute()
+		if err == nil {
 			fmt.Print("Line Num: ")
 			fmt.Print(line)
 			fmt.Print(" successful executed")
