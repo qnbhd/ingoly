@@ -19,16 +19,6 @@ func main() {
 	var jp parser.Parser
 	ps := jp.New(result)
 	ast := ps.Parse()
-	ast.PrintRecursive()
-
-	for line, instruction := range ast.Tree {
-		_, err := instruction.Execute()
-		if err == nil {
-			fmt.Print("Line Num: ")
-			fmt.Print(line)
-			fmt.Print(" successful executed")
-			fmt.Println()
-		}
-	}
-
+	ast.Print()
+	ast.Execute()
 }

@@ -1,9 +1,7 @@
-if 5 > 10:
-    print("Hello")
-else:
-    print("World")
+x = 5
+y = 10
 
-x = "Привет"
-print(x)
-y = "Мир"
-print(x + y)
+if x < y:
+    print("x меньше y")
+else:
+    print("x больше y")

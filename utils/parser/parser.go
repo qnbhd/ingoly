@@ -8,14 +8,13 @@ import (
 
 type Parser struct {
 	Tokens    []tokenizer.Token
-	variables map[string]Value
+	variables *BlockContext
 	size      int
 	pos       int
 }
 
 func (ps *Parser) New(tokens []tokenizer.Token) *Parser {
-	VarTable = make(map[string]Value)
-	return &Parser{Tokens: tokens, variables: VarTable, size: len(tokens), pos: 0}
+	return &Parser{Tokens: tokens, variables: NewBlockContext(), size: len(tokens), pos: 0}
 }
 
 func (ps *Parser) Parse() Ast {
@@ -30,28 +29,28 @@ func (ps *Parser) Parse() Ast {
 
 func (ps *Parser) Node() Node {
 	if ps.match(tokenizer.PRINT) {
-		return &PrintNode{node: ps.EXPRESSION()}
+		return &PrintNode{node: ps.Expression()}
 	} else if ps.match(tokenizer.IF) {
 		return ps.IfElseBlock()
 	}
-	return ps.ASSIGNNode()
+	return ps.AssignNode()
 }
 
-func (ps *Parser) ASSIGNNode() Node {
+func (ps *Parser) AssignNode() Node {
 	current := ps.get(0)
 
 	if ps.match(tokenizer.NAME) && ps.get(0).Type == tokenizer.EQUAL {
 		variable := current.Lexeme
 		_, ok := ps.consume(tokenizer.EQUAL)
 		if ok == nil {
-			return &AssignmentNode{Variable: variable, Expression: ps.EXPRESSION()}
+			return &AssignmentNode{Variable: variable, Expression: ps.Expression()}
 		}
 	}
 	panic("Eq err")
 }
 
 func (ps *Parser) IfElseBlock() Node {
-	condition := ps.EXPRESSION()
+	condition := ps.Expression()
 	ifStmt := ps.Node()
 	ps.consume(tokenizer.COLON)
 	var elseStmt Node
@@ -64,24 +63,24 @@ func (ps *Parser) IfElseBlock() Node {
 	return &IfNode{condition, ifStmt, elseStmt}
 }
 
-func (ps *Parser) EXPRESSION() Node {
+func (ps *Parser) Expression() Node {
 	return ps.Conditional()
 }
 
 func (ps *Parser) Conditional() Node {
-	result := ps.ADDITIVE()
+	result := ps.Additive()
 
 	for {
 		if ps.match(tokenizer.LESS) {
-			result = &ConditionalNode{'<', result, ps.ADDITIVE()}
+			result = &ConditionalNode{'<', result, ps.Additive()}
 			continue
 		}
 		if ps.match(tokenizer.GREATER) {
-			result = &ConditionalNode{'>', result, ps.ADDITIVE()}
+			result = &ConditionalNode{'>', result, ps.Additive()}
 			continue
 		}
 		if ps.match(tokenizer.EQUAL) {
-			result = &ConditionalNode{'=', result, ps.ADDITIVE()}
+			result = &ConditionalNode{'=', result, ps.Additive()}
 			continue
 		}
 		break
@@ -90,16 +89,16 @@ func (ps *Parser) Conditional() Node {
 	return result
 }
 
-func (ps *Parser) ADDITIVE() Node {
-	result := ps.MULT()
+func (ps *Parser) Additive() Node {
+	result := ps.Mult()
 
 	for {
 		if ps.match(tokenizer.PLUS) {
-			result = &BinaryNode{'+', result, ps.ADDITIVE()}
+			result = &BinaryNode{'+', result, ps.Additive()}
 			continue
 		}
 		if ps.match(tokenizer.MINUS) {
-			result = &BinaryNode{'-', result, ps.ADDITIVE()}
+			result = &BinaryNode{'-', result, ps.Additive()}
 			continue
 		}
 		break
@@ -108,16 +107,16 @@ func (ps *Parser) ADDITIVE() Node {
 	return result
 }
 
-func (ps *Parser) MULT() Node {
-	result := ps.UNARY()
+func (ps *Parser) Mult() Node {
+	result := ps.Unary()
 
 	for {
 		if ps.match(tokenizer.STAR) {
-			result = &BinaryNode{'*', result, ps.UNARY()}
+			result = &BinaryNode{'*', result, ps.Unary()}
 			continue
 		}
 		if ps.match(tokenizer.SLASH) {
-			result = &BinaryNode{'/', result, ps.UNARY()}
+			result = &BinaryNode{'/', result, ps.Unary()}
 			continue
 		}
 		break
@@ -126,7 +125,7 @@ func (ps *Parser) MULT() Node {
 	return result
 }
 
-func (ps *Parser) UNARY() Node {
+func (ps *Parser) Unary() Node {
 	if ps.match(tokenizer.MINUS) {
 		return &UnaryNode{'-', ps.PRIMARY()}
 	}
@@ -144,7 +143,7 @@ func (ps *Parser) PRIMARY() Node {
 		return &ValueNode{value: StringValue{current.Lexeme}}
 	}
 	if ps.match(tokenizer.LPAR) {
-		result := ps.EXPRESSION()
+		result := ps.Expression()
 		ps.match(tokenizer.RPAR)
 		return result
 	}
