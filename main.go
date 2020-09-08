@@ -4,11 +4,17 @@ import (
 	"fmt"
 	"ingoly/utils/parser"
 	"ingoly/utils/tokenizer"
+	"io/ioutil"
 )
 
 func main() {
-	lx := tokenizer.New(
-		`var + 5 - 7 * (6 - 3)`)
+	data, err := ioutil.ReadFile("example.ig")
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	lx := tokenizer.New(string(data))
 	result := lx.Tokenize()
 	var jp parser.Parser
 	ps := jp.New(result)
@@ -16,9 +22,13 @@ func main() {
 	ast.PrintRecursive()
 
 	for line, instruction := range ast.Tree {
-		execResult, _ := instruction.Execute()
-		fmt.Print("Line Num: ")
-		fmt.Print(line)
-		fmt.Println(" Result: ", execResult)
+		ok := instruction.Execute()
+		if ok == nil {
+			fmt.Print("Line Num: ")
+			fmt.Print(line)
+			fmt.Print(" successful executed")
+			fmt.Println()
+		}
 	}
+
 }

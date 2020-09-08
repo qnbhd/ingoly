@@ -1,31 +1,51 @@
 package parser
 
 import (
+	"errors"
 	"ingoly/utils/tokenizer"
 	"strconv"
 )
 
 type Parser struct {
 	Tokens    []tokenizer.Token
-	variables map[string]float64
+	variables map[string]Value
 	size      int
 	pos       int
 }
 
 func (ps *Parser) New(tokens []tokenizer.Token) *Parser {
-	VarTable = make(map[string]float64)
-	VarTable["var"] = 3
+	VarTable = make(map[string]Value)
 	return &Parser{Tokens: tokens, variables: VarTable, size: len(tokens), pos: 0}
 }
 
 func (ps *Parser) Parse() Ast {
-	ast := Ast{[]Node{}, ps.variables}
+	ast := Ast{[]Statement{}, ps.variables}
 
 	for !ps.match(tokenizer.EOF) {
-		ast.Tree = append(ast.Tree, ps.EXPRESSION())
+		ast.Tree = append(ast.Tree, ps.STATEMENT())
 	}
 
 	return ast
+}
+
+func (ps *Parser) STATEMENT() Statement {
+	if ps.match(tokenizer.PRINT) {
+		return &PrintStatement{node: ps.EXPRESSION()}
+	}
+	return ps.ASSIGNSTATEMENT()
+}
+
+func (ps *Parser) ASSIGNSTATEMENT() Statement {
+	current := ps.get(0)
+
+	if ps.match(tokenizer.NAME) && ps.get(0).Type == tokenizer.EQUAL {
+		variable := current.Lexeme
+		_, ok := ps.consume(tokenizer.EQUAL)
+		if ok == nil {
+			return &AssignmentStatement{Variable: variable, Expression: ps.EXPRESSION()}
+		}
+	}
+	panic("Eq err")
 }
 
 func (ps *Parser) EXPRESSION() Node {
@@ -80,7 +100,10 @@ func (ps *Parser) PRIMARY() Node {
 
 	if ps.match(tokenizer.NUMBER) {
 		lex, _ := strconv.ParseFloat(current.Lexeme, 64)
-		return &NumberNode{value: lex}
+		return &ValueNode{value: NumberValue{lex}}
+	}
+	if ps.match(tokenizer.STRING) {
+		return &ValueNode{value: StringValue{current.Lexeme}}
 	}
 	if ps.match(tokenizer.LPAR) {
 		result := ps.EXPRESSION()
@@ -88,7 +111,7 @@ func (ps *Parser) PRIMARY() Node {
 		return result
 	}
 	if ps.match(tokenizer.NAME) {
-		return &NameNode{name: current.Lexeme}
+		return &UsingVariableNode{name: current.Lexeme}
 	}
 
 	panic("WTF")
@@ -101,6 +124,16 @@ func (ps *Parser) match(tokenType tokenizer.TokenType) bool {
 	}
 	ps.pos++
 	return true
+}
+
+func (ps *Parser) consume(tokenType tokenizer.TokenType) (tokenizer.Token, error) {
+	current := ps.get(0)
+	if tokenType != current.Type {
+		return tokenizer.Token{Type: tokenizer.NIL},
+			errors.New(tokenType.String() + " was expected")
+	}
+	ps.pos++
+	return current, nil
 }
 
 func (ps *Parser) get(relativePosition int) tokenizer.Token {

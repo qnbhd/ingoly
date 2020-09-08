@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 )
 
-const PIX = "+-*/"
+const PIX = "+-*/="
 
 type Tokenizer struct {
 	Input  string
@@ -84,7 +84,12 @@ func (lx *Tokenizer) tokenizeWord() error {
 		current = lx.next()
 	}
 
-	lx.addToken(NAME, builder.String())
+	word := builder.String()
+	if word == "print" {
+		lx.addToken(PRINT, "")
+	} else {
+		lx.addToken(NAME, builder.String())
+	}
 
 	return nil
 }
@@ -103,18 +108,58 @@ func tokenOneSym(sym rune) TokenType {
 		return LPAR
 	case ')':
 		return RPAR
+	case '=':
+		return EQUAL
 	}
 	return NIL
 }
 
-func tokenTwoSym(twoSym string) TokenType {
-	switch twoSym {
-	case "+=":
-		return PLUSEQUAL
-	case "-=":
-		return MINEQUAL
+//func tokenTwoSym(twoSym string) TokenType {
+//	switch twoSym {
+//	case "+=":
+//		return PLUSEQUAL
+//	case "-=":
+//		return MINEQUAL
+//	}
+//	return NIL
+//}
+
+func (lx *Tokenizer) tokenizeText() error {
+	lx.next()
+
+	var builder strings.Builder
+	current := lx.peek(0)
+
+	for {
+		if current == '\\' {
+			current = lx.next()
+			switch current {
+			case '"':
+				current = lx.next()
+				builder.WriteRune('"')
+				continue
+			case 'n':
+				current = lx.next()
+				builder.WriteRune('\n')
+				continue
+			case 't':
+				current = lx.next()
+				builder.WriteRune('\t')
+				continue
+			}
+			builder.WriteRune('\\')
+			continue
+		}
+		if current == '"' {
+			break
+		}
+		builder.WriteRune(current)
+		current = lx.next()
 	}
-	return NIL
+	lx.next()
+
+	lx.addToken(STRING, builder.String())
+	return nil
 }
 
 func (lx *Tokenizer) Tokenize() []Token {
@@ -125,7 +170,8 @@ func (lx *Tokenizer) Tokenize() []Token {
 			_ = lx.tokenizeNumber()
 		} else if unicode.IsLetter(current) {
 			_ = lx.tokenizeWord()
-
+		} else if current == '"' {
+			_ = lx.tokenizeText()
 		} else if strings.Index(PIX, string(current)) != -1 {
 			_ = lx.tokenizeOperator()
 		} else {
