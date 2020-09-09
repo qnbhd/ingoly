@@ -35,12 +35,12 @@ func (as *ScopeVar) Walk(v Visitor) {
 /* Binary Node */
 
 type BinaryNode struct {
-	operation rune
+	operation string
 	op1       Node
 	op2       Node
 }
 
-func (bn *BinaryNode) New(operation rune, exp1, exp2 Node) *BinaryNode {
+func (bn *BinaryNode) New(operation string, exp1, exp2 Node) *BinaryNode {
 	return &BinaryNode{operation: operation, op1: exp1, op2: exp2}
 }
 
@@ -60,11 +60,11 @@ func (bn *BinaryNode) Walk(v Visitor) {
 /* Unary Node */
 
 type UnaryNode struct {
-	operation rune
+	operation string
 	op1       Node
 }
 
-func (un *UnaryNode) New(operation rune, op1 Node) *UnaryNode {
+func (un *UnaryNode) New(operation string, op1 Node) *UnaryNode {
 	return &UnaryNode{operation: operation, op1: op1}
 }
 
@@ -115,12 +115,12 @@ func (vn *ValueNode) Walk(v Visitor) {
 /* Binary Node */
 
 type ConditionalNode struct {
-	operation rune
+	operation string
 	op1       Node
 	op2       Node
 }
 
-func (bn *ConditionalNode) New(operation rune, exp1, exp2 Node) *ConditionalNode {
+func (bn *ConditionalNode) New(operation string, exp1, exp2 Node) *ConditionalNode {
 	return &ConditionalNode{operation: operation, op1: exp1, op2: exp2}
 }
 
@@ -139,16 +139,16 @@ func (bn *ConditionalNode) Walk(v Visitor) {
 
 /* Assignment Node */
 
-type AssignmentNode struct {
+type DeclarationNode struct {
 	Variable   string
 	Expression Node
 }
 
-func (as *AssignmentNode) New(variable string, node Node) *AssignmentNode {
-	return &AssignmentNode{Variable: variable, Expression: node}
+func (as *DeclarationNode) New(variable string, node Node) *DeclarationNode {
+	return &DeclarationNode{Variable: variable, Expression: node}
 }
 
-func (as *AssignmentNode) Walk(v Visitor) {
+func (as *DeclarationNode) Walk(v Visitor) {
 	if !v.EnterNode(as) {
 		return
 	}

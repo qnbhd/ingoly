@@ -16,6 +16,7 @@ func main() {
 
 	lx := tokenizer.New(string(data))
 	result := lx.Tokenize()
+	fmt.Println(result)
 	var jp parser.Parser
 	ps := jp.New(result)
 	ast := ps.Parse()

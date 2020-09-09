@@ -28,6 +28,7 @@ func (ps *Parser) Parse() Ast {
 }
 
 func (ps *Parser) Node() Node {
+
 	if ps.match(tokenizer.PRINT) {
 		return &PrintNode{node: ps.Expression()}
 	} else if ps.match(tokenizer.IF) {
@@ -37,22 +38,26 @@ func (ps *Parser) Node() Node {
 }
 
 func (ps *Parser) AssignNode() Node {
-	current := ps.get(0)
 
-	if ps.match(tokenizer.NAME) && ps.get(0).Type == tokenizer.EQUAL {
-		variable := current.Lexeme
-		_, ok := ps.consume(tokenizer.EQUAL)
+	if ps.match(tokenizer.VAR) && ps.get(0).Type == tokenizer.NAME &&
+		ps.get(1).Type == tokenizer.COLONEQUAL {
+
+		variable := ps.get(0).Lexeme
+		ps.match(tokenizer.NAME)
+
+		_, ok := ps.consume(tokenizer.COLONEQUAL)
 		if ok == nil {
-			return &AssignmentNode{Variable: variable, Expression: ps.Expression()}
+			return &DeclarationNode{Variable: variable, Expression: ps.Expression()}
 		}
 	}
+
 	panic("Eq err")
 }
 
 func (ps *Parser) IfElseBlock() Node {
 	condition := ps.Expression()
-	ifStmt := ps.Node()
 	ps.consume(tokenizer.COLON)
+	ifStmt := ps.Node()
 	var elseStmt Node
 	if ps.match(tokenizer.ELSE) {
 		ps.consume(tokenizer.COLON)
@@ -72,15 +77,27 @@ func (ps *Parser) Conditional() Node {
 
 	for {
 		if ps.match(tokenizer.LESS) {
-			result = &ConditionalNode{'<', result, ps.Additive()}
+			result = &ConditionalNode{"<", result, ps.Additive()}
 			continue
 		}
 		if ps.match(tokenizer.GREATER) {
-			result = &ConditionalNode{'>', result, ps.Additive()}
+			result = &ConditionalNode{">", result, ps.Additive()}
 			continue
 		}
-		if ps.match(tokenizer.EQUAL) {
-			result = &ConditionalNode{'=', result, ps.Additive()}
+		if ps.match(tokenizer.EQEQUAL) {
+			result = &ConditionalNode{"==", result, ps.Additive()}
+			continue
+		}
+		if ps.match(tokenizer.LESSEQUAL) {
+			result = &ConditionalNode{"<=", result, ps.Additive()}
+			continue
+		}
+		if ps.match(tokenizer.GREATEREQUAL) {
+			result = &ConditionalNode{">=", result, ps.Additive()}
+			continue
+		}
+		if ps.match(tokenizer.NOTEQUAL) {
+			result = &ConditionalNode{"!=", result, ps.Additive()}
 			continue
 		}
 		break
@@ -94,11 +111,11 @@ func (ps *Parser) Additive() Node {
 
 	for {
 		if ps.match(tokenizer.PLUS) {
-			result = &BinaryNode{'+', result, ps.Additive()}
+			result = &BinaryNode{"+", result, ps.Additive()}
 			continue
 		}
 		if ps.match(tokenizer.MINUS) {
-			result = &BinaryNode{'-', result, ps.Additive()}
+			result = &BinaryNode{"-", result, ps.Additive()}
 			continue
 		}
 		break
@@ -112,11 +129,11 @@ func (ps *Parser) Mult() Node {
 
 	for {
 		if ps.match(tokenizer.STAR) {
-			result = &BinaryNode{'*', result, ps.Unary()}
+			result = &BinaryNode{"*", result, ps.Unary()}
 			continue
 		}
 		if ps.match(tokenizer.SLASH) {
-			result = &BinaryNode{'/', result, ps.Unary()}
+			result = &BinaryNode{"/", result, ps.Unary()}
 			continue
 		}
 		break
@@ -127,7 +144,7 @@ func (ps *Parser) Mult() Node {
 
 func (ps *Parser) Unary() Node {
 	if ps.match(tokenizer.MINUS) {
-		return &UnaryNode{'-', ps.PRIMARY()}
+		return &UnaryNode{"-", ps.PRIMARY()}
 	}
 	return ps.PRIMARY()
 }

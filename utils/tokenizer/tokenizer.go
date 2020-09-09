@@ -6,16 +6,90 @@ import (
 	"unicode"
 )
 
-const PIX = "+-*/=<>"
+const PIX = "+-*():/=<>!&|"
+
+type Reserved struct {
+	Operators map[string]TokenType
+}
+
+func GetReservedOperators() *Reserved {
+	var ops Reserved
+	ops.Operators = map[string]TokenType{}
+
+	ops.Operators["+"] = PLUS
+	ops.Operators["-"] = MINUS
+	ops.Operators["*"] = STAR
+	ops.Operators["/"] = SLASH
+	ops.Operators["%"] = PERCENT
+	ops.Operators["^"] = CIRCUMFLEX
+	ops.Operators["("] = LPAR
+	ops.Operators[")"] = RPAR
+	ops.Operators["{"] = LBRACE
+	ops.Operators["}"] = RBRACE
+	ops.Operators["["] = LSQB
+	ops.Operators["]"] = RSQB
+	ops.Operators["="] = EQUAL
+	ops.Operators["<"] = LESS
+	ops.Operators[">"] = GREATER
+	ops.Operators["."] = DOT
+	ops.Operators[","] = COMMA
+	ops.Operators[":"] = COLON
+	ops.Operators[";"] = SEMI
+	ops.Operators["~"] = TILDE
+
+	ops.Operators["!"] = EXCL
+	ops.Operators["&"] = AMPER
+	ops.Operators["|"] = VBAR
+
+	ops.Operators[":="] = COLONEQUAL
+	ops.Operators["=="] = EQEQUAL
+	ops.Operators["!="] = NOTEQUAL
+	ops.Operators["<="] = LESSEQUAL
+	ops.Operators[">="] = GREATEREQUAL
+	ops.Operators["**"] = DOUBLESTAR
+	ops.Operators["||"] = VBARVBAR
+
+	ops.Operators["+="] = PLUSEQUAL
+	ops.Operators["-="] = MINEQUAL
+	ops.Operators["*="] = STAREQUAL
+	ops.Operators["/="] = SLASHEQUAL
+	ops.Operators["%="] = PERCENTEQUAL
+	ops.Operators["&="] = AMPEREQUAL
+	ops.Operators["|="] = VBAREQUAL
+	ops.Operators["^="] = CIRCUMFLEXEQUAL
+
+	ops.Operators["&&"] = AMPERAMPER
+	ops.Operators["+"] = PLUS
+
+	return &ops
+}
+
+func GetReservedKeywords() *Reserved {
+	var ops Reserved
+	ops.Operators = map[string]TokenType{}
+
+	ops.Operators["print"] = PRINT
+	ops.Operators["if"] = IF
+	ops.Operators["else"] = ELSE
+	ops.Operators["for"] = FOR
+	ops.Operators["var"] = VAR
+
+	return &ops
+}
 
 type Tokenizer struct {
-	Input  []rune
-	tokens []Token
-	pos    int
+	Input            []rune
+	tokens           []Token
+	reservedOps      *Reserved
+	reserverKeywords *Reserved
+	pos              int
 }
 
 func New(input string) *Tokenizer {
-	return &Tokenizer{Input: []rune(input), tokens: []Token{}, pos: 0}
+	return &Tokenizer{Input: []rune(input), tokens: []Token{},
+		reservedOps:      GetReservedOperators(),
+		reserverKeywords: GetReservedKeywords(),
+		pos:              0}
 }
 
 func (lx *Tokenizer) addToken(tokenType TokenType, lexeme string) {
@@ -63,15 +137,63 @@ func (lx *Tokenizer) tokenizeNumber() error {
 
 func (lx *Tokenizer) tokenizeOperator() error {
 	current := lx.peek(0)
-	tokenType := tokenOneSym(current)
-	if tokenType != NIL {
-		lx.addToken(tokenType, "")
-		lx.next()
-		return nil
+	if current == '/' {
+		if lx.peek(1) == '/' {
+			lx.next()
+			lx.next()
+			_ = lx.tokenizeComment()
+			return nil
+		} else if lx.peek(1) == '*' {
+			lx.next()
+			lx.next()
+			_ = lx.tokenizeMultiLineComment()
+			return nil
+		}
 	}
-	return errors.New("invalid operator")
+
+	var buffer strings.Builder
+
+	for {
+		text := buffer.String()
+		if _, ok := lx.reservedOps.Operators[text+string(current)]; !ok && !(text == "") {
+			lx.addToken(lx.reservedOps.Operators[text], "")
+			return nil
+		}
+		buffer.WriteRune(current)
+		current = lx.next()
+	}
+
 }
 
+func (lx *Tokenizer) tokenizeComment() error {
+	current := lx.peek(0)
+
+	for current != '\r' && current != '\n' && current != '\x00' {
+		current = lx.next()
+	}
+
+	return nil
+
+}
+
+func (lx *Tokenizer) tokenizeMultiLineComment() error {
+	current := lx.peek(0)
+
+	for {
+		if current == '\x00' {
+			return errors.New("missing closing tag")
+		}
+		if current == '*' && lx.peek(1) == '/' {
+			lx.next()
+			lx.next()
+			break
+		}
+		current = lx.next()
+	}
+
+	return nil
+
+}
 func (lx *Tokenizer) tokenizeWord() error {
 	var builder strings.Builder
 	current := lx.peek(0)
@@ -84,54 +206,15 @@ func (lx *Tokenizer) tokenizeWord() error {
 	}
 
 	word := builder.String()
-	switch word {
-	case "print":
-		lx.addToken(PRINT, "")
-	case "if":
-		lx.addToken(IF, "")
-	case "else":
-		lx.addToken(ELSE, "")
-	default:
-		lx.addToken(NAME, builder.String())
+
+	if result, ok := lx.reserverKeywords.Operators[word]; ok {
+		lx.addToken(result, "")
+		return nil
 	}
+	lx.addToken(NAME, builder.String())
+
 	return nil
 }
-
-func tokenOneSym(sym rune) TokenType {
-	switch sym {
-	case '+':
-		return PLUS
-	case '-':
-		return MINUS
-	case '*':
-		return STAR
-	case '/':
-		return SLASH
-	case '(':
-		return LPAR
-	case ')':
-		return RPAR
-	case '=':
-		return EQUAL
-	case '>':
-		return GREATER
-	case '<':
-		return LESS
-	case ':':
-		return COLON
-	}
-	return NIL
-}
-
-//func tokenTwoSym(twoSym string) TokenType {
-//	switch twoSym {
-//	case "+=":
-//		return PLUSEQUAL
-//	case "-=":
-//		return MINEQUAL
-//	}
-//	return NIL
-//}
 
 func (lx *Tokenizer) tokenizeText() error {
 	lx.next()

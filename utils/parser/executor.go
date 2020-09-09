@@ -34,7 +34,7 @@ func (w Executor) EnterNode(n Node) bool {
 		switch v := result1.(type) {
 		case StringValue:
 			string1 := v.AsString()
-			if s.operation == '+' {
+			if s.operation == "+" {
 				w.stack.Push(StringValue{string1 + result2.AsString()})
 			}
 
@@ -43,13 +43,13 @@ func (w Executor) EnterNode(n Node) bool {
 			number2 := result2.AsNumber()
 
 			switch s.operation {
-			case '+':
+			case "+":
 				w.stack.Push(NumberValue{number1 + number2})
-			case '-':
+			case "-":
 				w.stack.Push(NumberValue{number1 - number2})
-			case '*':
+			case "*":
 				w.stack.Push(NumberValue{number1 * number2})
-			case '/':
+			case "/":
 				if number2 != 0 {
 					w.stack.Push(NumberValue{number1 / number2})
 				}
@@ -58,7 +58,7 @@ func (w Executor) EnterNode(n Node) bool {
 
 		return false
 
-	case *AssignmentNode:
+	case *DeclarationNode:
 		s.Expression.Walk(w)
 		w.ctx.Vars[s.Variable], _ = w.stack.Pop()
 		return false
@@ -67,10 +67,10 @@ func (w Executor) EnterNode(n Node) bool {
 		s.op1.Walk(w)
 		top, _ := w.stack.Pop()
 		switch s.operation {
-		case '-':
+		case "-":
 			inst := NumberValue{top.AsNumber()}
 			w.stack.Push(inst)
-		case '+':
+		case "+":
 			w.stack.Push(top)
 		}
 
@@ -93,21 +93,39 @@ func (w Executor) EnterNode(n Node) bool {
 		switch v := result1.(type) {
 		case StringValue:
 			string1 := v.AsString()
-			if s.operation == '=' {
+			if s.operation == "==" {
 				res := 0.
 				if string1 == result2.AsString() {
 					res = 1
 				}
 				w.stack.Push(NumberValue{res})
-			} else if s.operation == '>' {
+			} else if s.operation == ">" {
 				res := 0.
 				if string1 > result2.AsString() {
 					res = 1
 				}
 				w.stack.Push(NumberValue{res})
-			} else if s.operation == '<' {
+			} else if s.operation == "<" {
 				res := 0.
 				if string1 < result2.AsString() {
+					res = 1
+				}
+				w.stack.Push(NumberValue{res})
+			} else if s.operation == "<=" {
+				res := 0.
+				if string1 <= result2.AsString() {
+					res = 1
+				}
+				w.stack.Push(NumberValue{res})
+			} else if s.operation == ">=" {
+				res := 0.
+				if string1 >= result2.AsString() {
+					res = 1
+				}
+				w.stack.Push(NumberValue{res})
+			} else if s.operation == "!=" {
+				res := 0.
+				if string1 != result2.AsString() {
 					res = 1
 				}
 				w.stack.Push(NumberValue{res})
@@ -117,21 +135,39 @@ func (w Executor) EnterNode(n Node) bool {
 			number2 := result2.AsNumber()
 
 			switch s.operation {
-			case '=':
+			case "=":
 				res := 0.
 				if number1 == number2 {
 					res = 1
 				}
 				w.stack.Push(NumberValue{res})
-			case '<':
+			case "<":
 				res := 0.
 				if number1 < number2 {
 					res = 1
 				}
 				w.stack.Push(NumberValue{res})
-			case '>':
+			case ">":
 				res := 0.
 				if number1 > number2 {
+					res = 1
+				}
+				w.stack.Push(NumberValue{res})
+			case ">=":
+				res := 0.
+				if number1 >= number2 {
+					res = 1
+				}
+				w.stack.Push(NumberValue{res})
+			case "<=":
+				res := 0.
+				if number1 <= number2 {
+					res = 1
+				}
+				w.stack.Push(NumberValue{res})
+			case "!=":
+				res := 0.
+				if number1 != number2 {
 					res = 1
 				}
 				w.stack.Push(NumberValue{res})

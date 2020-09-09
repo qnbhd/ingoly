@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 )
 
 type Printer struct {
@@ -21,31 +22,31 @@ func (w Printer) EnterNode(n Node) bool {
 
 	switch s := n.(type) {
 	case *BinaryNode:
-		fmt.Println("!--> Binary Operation (Operation) '" + string(s.operation) + "'")
+		color.Green("!--> Binary Operation (Operation) '" + s.operation + "'")
 		s.op1.Walk(w)
 		s.op2.Walk(w)
 		return false
 
-	case *AssignmentNode:
-		fmt.Println("!--> Assignment Statement (Statement) var '" + s.Variable + "'")
+	case *DeclarationNode:
+		color.Green("!--> Declaration Variable Statement (Statement) var '" + s.Variable + "'")
 		s.Expression.Walk(w)
 		return false
 
 	case *UnaryNode:
-		fmt.Println("!--> Unary Operation (Operation) '" + string(s.operation) + "'")
+		color.Green("!--> Unary Operation (Operation) '" + s.operation + "'")
 		s.op1.Walk(w)
 		return false
 
 	case *UsingVariableNode:
-		fmt.Println("!--> Using Variable (Value) '" + s.name + "'")
+		color.Blue("!--> Using Variable (Value) '" + s.name + "'")
 		return false
 
 	case *ScopeVar:
-		fmt.Println("!--> Scope Variable (Value) '" + s.Name + "'")
+		color.Green("!--> Scope Variable (Value) '" + s.Name + "'")
 		return false
 
 	case *ValueNode:
-		fmt.Println("!--> Value Node (Value) '" + s.value.AsString() + "'")
+		color.Blue("!--> Value Node (Value) '" + s.value.AsString() + "'")
 		switch s := s.value.(type) {
 		case *NumberValue:
 			fmt.Print(s.value)
@@ -55,23 +56,28 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *ConditionalNode:
-		fmt.Println("!--> Logical Operation (Operation) '" + string(s.operation) + "'")
+		color.Green("!--> Logical Operation (Operation) '" + s.operation + "'")
 		s.op1.Walk(w)
 		s.op2.Walk(w)
 		return false
 
 	case *PrintNode:
-		fmt.Println("!--> Print Operator (Keyword)")
+		color.Magenta("!--> Print Operator (Keyword)")
 		s.node.Walk(w)
 		return false
 
 	case *IfNode:
-		fmt.Println("!--> If Else Block")
+		color.Green("!--> If Else Block")
 		s.node.Walk(w)
-		fmt.Println("!--> If Block")
+		color.Green("!--> If Case")
+
 		s.ifStmt.Walk(w)
-		fmt.Println("!--> Else Block")
-		s.elseStmt.Walk(w)
+
+		if s.elseStmt != nil {
+			color.Green("!--> Else Case")
+
+			s.elseStmt.Walk(w)
+		}
 		return false
 	}
 
