@@ -147,16 +147,12 @@ func (lx *Tokenizer) tokenizeOperator() error {
 			lx.next()
 			lx.next()
 			err := lx.tokenizeComment()
-			inn := errpull.NewInnerError(err, lx.currentLine)
-			lx.ErrorsPull.Errors = append(lx.ErrorsPull.Errors, inn)
-			return nil
+			return err
 		} else if lx.peek(1) == '*' {
 			lx.next()
 			lx.next()
 			err := lx.tokenizeMultiLineComment()
-			inn := errpull.NewInnerError(err, lx.currentLine)
-			lx.ErrorsPull.Errors = append(lx.ErrorsPull.Errors, inn)
-			return nil
+			return err
 		}
 	}
 
