@@ -18,10 +18,7 @@ type Node interface {
 
 type ScopeVar struct {
 	Name string
-}
-
-func NewScopeVar(name string) *ScopeVar {
-	return &ScopeVar{Name: name}
+	Line int
 }
 
 func (as *ScopeVar) Walk(v Visitor) {
@@ -38,10 +35,7 @@ type BinaryNode struct {
 	operation string
 	op1       Node
 	op2       Node
-}
-
-func (bn *BinaryNode) New(operation string, exp1, exp2 Node) *BinaryNode {
-	return &BinaryNode{operation: operation, op1: exp1, op2: exp2}
+	Line      int
 }
 
 func (bn *BinaryNode) Walk(v Visitor) {
@@ -62,10 +56,7 @@ func (bn *BinaryNode) Walk(v Visitor) {
 type UnaryNode struct {
 	operation string
 	op1       Node
-}
-
-func (un *UnaryNode) New(operation string, op1 Node) *UnaryNode {
-	return &UnaryNode{operation: operation, op1: op1}
+	Line      int
 }
 
 func (un *UnaryNode) Walk(v Visitor) {
@@ -84,6 +75,7 @@ func (un *UnaryNode) Walk(v Visitor) {
 
 type UsingVariableNode struct {
 	name string
+	Line int
 }
 
 func (uvn *UsingVariableNode) Walk(v Visitor) {
@@ -100,6 +92,7 @@ func (uvn *UsingVariableNode) Walk(v Visitor) {
 
 type ValueNode struct {
 	value Value
+	Line  int
 }
 
 func (vn *ValueNode) Walk(v Visitor) {
@@ -118,10 +111,7 @@ type ConditionalNode struct {
 	operation string
 	op1       Node
 	op2       Node
-}
-
-func (bn *ConditionalNode) New(operation string, exp1, exp2 Node) *ConditionalNode {
-	return &ConditionalNode{operation: operation, op1: exp1, op2: exp2}
+	Line      int
 }
 
 func (bn *ConditionalNode) Walk(v Visitor) {
@@ -142,10 +132,7 @@ func (bn *ConditionalNode) Walk(v Visitor) {
 type DeclarationNode struct {
 	Variable   string
 	Expression Node
-}
-
-func (as *DeclarationNode) New(variable string, node Node) *DeclarationNode {
-	return &DeclarationNode{Variable: variable, Expression: node}
+	Line       int
 }
 
 func (as *DeclarationNode) Walk(v Visitor) {
@@ -164,6 +151,7 @@ func (as *DeclarationNode) Walk(v Visitor) {
 
 type PrintNode struct {
 	node Node
+	Line int
 }
 
 func (ps *PrintNode) Walk(v Visitor) {
@@ -184,6 +172,7 @@ type IfNode struct {
 	node     Node
 	ifStmt   Node
 	elseStmt Node
+	Line     int
 }
 
 func (is *IfNode) Walk(v Visitor) {

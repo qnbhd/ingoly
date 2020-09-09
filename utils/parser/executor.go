@@ -178,7 +178,7 @@ func (w Executor) EnterNode(n Node) bool {
 	case *PrintNode:
 		s.node.Walk(w)
 		res, _ := w.stack.Pop()
-		fmt.Print(res.AsString())
+		fmt.Println(res.AsString())
 		return false
 
 	case *IfNode:

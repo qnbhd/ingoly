@@ -2,6 +2,7 @@ package tokenizer
 
 import (
 	"errors"
+	"ingoly/utils/errpull"
 	"strings"
 	"unicode"
 )
@@ -81,19 +82,23 @@ type Tokenizer struct {
 	Input            []rune
 	tokens           []Token
 	reservedOps      *Reserved
-	reserverKeywords *Reserved
+	reservedKeywords *Reserved
 	pos              int
+	currentLine      int
+	ErrorsPull       *errpull.ErrorsPull
 }
 
 func New(input string) *Tokenizer {
 	return &Tokenizer{Input: []rune(input), tokens: []Token{},
 		reservedOps:      GetReservedOperators(),
-		reserverKeywords: GetReservedKeywords(),
-		pos:              0}
+		reservedKeywords: GetReservedKeywords(),
+		pos:              0,
+		currentLine:      1,
+		ErrorsPull:       errpull.NewErrorsPull()}
 }
 
-func (lx *Tokenizer) addToken(tokenType TokenType, lexeme string) {
-	lx.tokens = append(lx.tokens, Token{tokenType, lexeme})
+func (lx *Tokenizer) addToken(tokenType TokenType, lexeme string, line int) {
+	lx.tokens = append(lx.tokens, Token{tokenType, lexeme, line})
 }
 
 func (lx Tokenizer) Length() int {
@@ -126,12 +131,12 @@ func (lx *Tokenizer) tokenizeNumber() error {
 			buffer.WriteRune(current)
 			current = lx.next()
 		} else if current == '.' && (strings.Index(buffer.String(), ".")) != -1 {
-			return errors.New("invalid number")
+			return errors.New("lexing: invalid number")
 		}
 
 	}
 
-	lx.addToken(NUMBER, strings.Trim(buffer.String(), ` \`))
+	lx.addToken(NUMBER, strings.Trim(buffer.String(), ` \`), lx.currentLine)
 	return nil
 }
 
@@ -141,12 +146,16 @@ func (lx *Tokenizer) tokenizeOperator() error {
 		if lx.peek(1) == '/' {
 			lx.next()
 			lx.next()
-			_ = lx.tokenizeComment()
+			err := lx.tokenizeComment()
+			inn := errpull.NewInnerError(err, lx.currentLine)
+			lx.ErrorsPull.Errors = append(lx.ErrorsPull.Errors, inn)
 			return nil
 		} else if lx.peek(1) == '*' {
 			lx.next()
 			lx.next()
-			_ = lx.tokenizeMultiLineComment()
+			err := lx.tokenizeMultiLineComment()
+			inn := errpull.NewInnerError(err, lx.currentLine)
+			lx.ErrorsPull.Errors = append(lx.ErrorsPull.Errors, inn)
 			return nil
 		}
 	}
@@ -156,7 +165,7 @@ func (lx *Tokenizer) tokenizeOperator() error {
 	for {
 		text := buffer.String()
 		if _, ok := lx.reservedOps.Operators[text+string(current)]; !ok && !(text == "") {
-			lx.addToken(lx.reservedOps.Operators[text], "")
+			lx.addToken(lx.reservedOps.Operators[text], "", lx.currentLine)
 			return nil
 		}
 		buffer.WriteRune(current)
@@ -181,7 +190,7 @@ func (lx *Tokenizer) tokenizeMultiLineComment() error {
 
 	for {
 		if current == '\x00' {
-			return errors.New("missing closing tag")
+			return errors.New("lexing: missing closing tag in multi-line comment")
 		}
 		if current == '*' && lx.peek(1) == '/' {
 			lx.next()
@@ -207,11 +216,11 @@ func (lx *Tokenizer) tokenizeWord() error {
 
 	word := builder.String()
 
-	if result, ok := lx.reserverKeywords.Operators[word]; ok {
-		lx.addToken(result, "")
+	if result, ok := lx.reservedKeywords.Operators[word]; ok {
+		lx.addToken(result, "", lx.currentLine)
 		return nil
 	}
-	lx.addToken(NAME, builder.String())
+	lx.addToken(NAME, builder.String(), lx.currentLine)
 
 	return nil
 }
@@ -250,28 +259,38 @@ func (lx *Tokenizer) tokenizeText() error {
 	}
 	lx.next()
 
-	lx.addToken(STRING, builder.String())
+	lx.addToken(STRING, builder.String(), lx.currentLine)
 	return nil
 }
 
-func (lx *Tokenizer) Tokenize() []Token {
+func (lx *Tokenizer) Tokenize() ([]Token, *errpull.ErrorsPull) {
 	for lx.pos < lx.Length() {
 		current := lx.peek(0)
 
+		if current == '\n' {
+			lx.currentLine++
+		}
+
+		var err error
 		if unicode.IsDigit(current) {
-			_ = lx.tokenizeNumber()
+			err = lx.tokenizeNumber()
 		} else if unicode.IsLetter(current) {
-			_ = lx.tokenizeWord()
+			err = lx.tokenizeWord()
 		} else if current == '"' {
-			_ = lx.tokenizeText()
+			err = lx.tokenizeText()
 		} else if strings.Index(PIX, string(current)) != -1 {
-			_ = lx.tokenizeOperator()
+			err = lx.tokenizeOperator()
 		} else {
 			lx.next()
 		}
 
+		if err != nil {
+			inn := errpull.NewInnerError(err, lx.currentLine)
+			lx.ErrorsPull.Errors = append(lx.ErrorsPull.Errors, inn)
+		}
+
 	}
 
-	lx.addToken(EOF, "")
-	return lx.tokens
+	lx.addToken(EOF, "", lx.currentLine)
+	return lx.tokens, lx.ErrorsPull
 }
