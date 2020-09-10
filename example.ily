@@ -1,11 +1,8 @@
-var x := 15
+var x := 5
 var y := 10
 
-
-if x < y {
-    print(5 + 7)
-    print(6)
-    print("HW")
+if (x < y && x > 10) || (y == 10) {
+    print(1)
 } else {
-    print("RR")
+    print(0)
 }
