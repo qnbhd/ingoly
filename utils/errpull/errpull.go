@@ -26,7 +26,7 @@ func (ep *ErrorsPull) Print() {
 	for _, err := range ep.Errors {
 		errTrace := fmt.Sprintf("%q", err.Err)
 		errTrace = errTrace[1 : len(errTrace)-1]
-		color.HiRed("[!] Error %s at line %d\n", errTrace, err.SourceLine)
+		color.HiRed("[!] Error %s nearby %d line \n", errTrace, err.SourceLine)
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 	"unicode"
 )
 
-const PIX = "+-*():/=<>!&|"
+const PIX = "+-*(){}[]:/=<>!&|"
 
 type Reserved struct {
 	Operators map[string]TokenType

@@ -2,36 +2,57 @@ package parser
 
 import (
 	"errors"
+	"ingoly/utils/errpull"
 	"ingoly/utils/tokenizer"
 	"strconv"
 )
 
 type Parser struct {
-	Tokens    []tokenizer.Token
-	variables *BlockContext
-	size      int
-	pos       int
+	Tokens     []tokenizer.Token
+	variables  *BlockContext
+	size       int
+	pos        int
+	ErrorsPull *errpull.ErrorsPull
 }
 
 func (ps *Parser) New(tokens []tokenizer.Token) *Parser {
-	return &Parser{Tokens: tokens, variables: NewBlockContext(), size: len(tokens), pos: 0}
+	return &Parser{Tokens: tokens, variables: NewBlockContext(), size: len(tokens), pos: 0,
+		ErrorsPull: errpull.NewErrorsPull()}
 }
 
-func (ps *Parser) Parse() Ast {
-	ast := Ast{[]Node{}, ps.variables}
+func (ps *Parser) Parse() (Ast, *errpull.ErrorsPull) {
+	ast := Ast{[]Node{}}
 
 	for !ps.match(tokenizer.EOF) {
 		ast.Tree = append(ast.Tree, ps.Node())
 	}
 
-	return ast
+	return ast, ps.ErrorsPull
+}
+
+func (ps *Parser) Block() Node {
+	block := BlockNode{}
+	ps.consume(tokenizer.LBRACE)
+	for !ps.match(tokenizer.RBRACE) {
+		block.Nodes = append(block.Nodes, ps.Node())
+	}
+	return &block
+}
+
+func (ps *Parser) StatementOrBlock() Node {
+
+	if ps.get(0).Type == tokenizer.LBRACE {
+		return ps.Block()
+	}
+	return ps.Node()
 }
 
 func (ps *Parser) Node() Node {
 	line := ps.get(0).Line
 
 	if ps.match(tokenizer.PRINT) {
-		return &PrintNode{node: ps.Expression(), Line: line}
+		res := &PrintNode{node: ps.Expression(), Line: line}
+		return res
 	} else if ps.match(tokenizer.IF) {
 		return ps.IfElseBlock()
 	}
@@ -59,12 +80,10 @@ func (ps *Parser) IfElseBlock() Node {
 	line := ps.get(0).Line
 
 	condition := ps.Expression()
-	ps.consume(tokenizer.COLON)
-	ifStmt := ps.Node()
+	ifStmt := ps.StatementOrBlock()
 	var elseStmt Node
 	if ps.match(tokenizer.ELSE) {
-		ps.consume(tokenizer.COLON)
-		elseStmt = ps.Node()
+		elseStmt = ps.StatementOrBlock()
 	} else {
 		elseStmt = nil
 	}
@@ -170,7 +189,7 @@ func (ps *Parser) PRIMARY() Node {
 	}
 	if ps.match(tokenizer.LPAR) {
 		result := ps.Expression()
-		ps.match(tokenizer.RPAR)
+		ps.consume(tokenizer.RPAR)
 		return result
 	}
 	if ps.match(tokenizer.NAME) {
@@ -191,9 +210,13 @@ func (ps *Parser) match(tokenType tokenizer.TokenType) bool {
 
 func (ps *Parser) consume(tokenType tokenizer.TokenType) (tokenizer.Token, error) {
 	current := ps.get(0)
+	err := errors.New("parsing: " + tokenType.String() + " was expected")
+
 	if tokenType != current.Type {
-		return tokenizer.Token{Type: tokenizer.NIL},
-			errors.New(tokenType.String() + " was expected")
+		line := ps.get(0).Line
+		inn := errpull.NewInnerError(err, line)
+		ps.ErrorsPull.Errors = append(ps.ErrorsPull.Errors, inn)
+		return tokenizer.Token{Type: tokenizer.NIL}, err
 	}
 	ps.pos++
 	return current, nil

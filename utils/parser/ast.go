@@ -1,8 +1,7 @@
 package parser
 
 type Ast struct {
-	Tree      []Node
-	variables *BlockContext
+	Tree []Node
 }
 
 func (ast *Ast) Print() {

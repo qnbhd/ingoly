@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"ingoly/utils/parser"
 	"ingoly/utils/tokenizer"
 	"io/ioutil"
 	"os"
@@ -19,6 +20,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	lx := tokenizer.New(string(data))
@@ -29,12 +31,16 @@ func main() {
 		return
 	}
 
-	fmt.Println(result)
+	var jp parser.Parser
+	ps := jp.New(result)
+	ast, parserErrorPull := ps.Parse()
 
-	//
-	//var jp parser.Parser
-	//ps := jp.New(result)
-	//ast := ps.Parse()
-	//ast.Print()
-	//ast.Execute()
+	if !parserErrorPull.IsEmpty() {
+		parserErrorPull.Print()
+		return
+	}
+
+	ast.Print()
+
+	ast.Execute()
 }

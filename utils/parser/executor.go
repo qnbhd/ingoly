@@ -14,8 +14,8 @@ func NewExecutor() Executor {
 	return Executor{NewBlockContext(), NewStack()}
 }
 
-func (ex *Executor) GetFromContext(name string) (Value, error) {
-	res, ok := ex.ctx.Vars[name]
+func (w *Executor) GetFromContext(name string) (Value, error) {
+	res, ok := w.ctx.Vars[name]
 	if ok {
 		return res, nil
 	}

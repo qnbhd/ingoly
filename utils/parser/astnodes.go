@@ -16,6 +16,34 @@ type Node interface {
 
 //////////////////
 
+type BaseNode struct {
+	Ast *Ast
+}
+
+func (bn *BaseNode) Walk(v Visitor) {
+	if !v.EnterNode(bn) {
+		return
+	}
+
+	for _, node := range bn.Ast.Tree {
+		node.Walk(v)
+	}
+}
+
+type BlockNode struct {
+	Nodes []Node
+}
+
+func (bn *BlockNode) Walk(v Visitor) {
+	if !v.EnterNode(bn) {
+		return
+	}
+
+	for _, node := range bn.Nodes {
+		node.Walk(v)
+	}
+}
+
 type ScopeVar struct {
 	Name string
 	Line int
