@@ -55,6 +55,8 @@ func (ps *Parser) Node() Node {
 		return res
 	} else if ps.match(tokenizer.IF) {
 		return ps.IfElseBlock()
+	} else if ps.match(tokenizer.FOR) {
+		return ps.ForBlock()
 	}
 	return ps.AssignNode()
 }
@@ -88,6 +90,51 @@ func (ps *Parser) IfElseBlock() Node {
 		elseStmt = nil
 	}
 	return &IfNode{condition, ifStmt, elseStmt, line}
+}
+
+func (ps *Parser) ForBlock() Node {
+	line := ps.get(0).Line
+
+	iterVar, _ := ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.IN)
+	ps.consume(tokenizer.LSQB)
+
+	startT, _ := ps.consume(tokenizer.NUMBER)
+	start, _ := strconv.ParseFloat(startT.Lexeme, 64)
+
+	ps.consume(tokenizer.SEMI)
+	stopT, _ := ps.consume(tokenizer.NUMBER)
+	stop, _ := strconv.ParseFloat(stopT.Lexeme, 64)
+
+	step := 1.
+	if ps.get(0).Type == tokenizer.SEMI {
+		ps.consume(tokenizer.SEMI)
+		stepT, _ := ps.consume(tokenizer.NUMBER)
+		step, _ = strconv.ParseFloat(stepT.Lexeme, 64)
+	}
+
+	strict := false
+	switch ps.get(0).Type {
+	case tokenizer.RSQB:
+		ps.consume(tokenizer.RSQB)
+		strict = true
+	case tokenizer.RPAR:
+		ps.consume(tokenizer.RPAR)
+		strict = false
+	}
+
+	stmt := ps.StatementOrBlock()
+
+	return &ForNode{
+		iterVar: iterVar.Lexeme,
+		start:   NumberValue{start},
+		stop:    NumberValue{stop},
+		step:    NumberValue{step},
+		stmt:    stmt,
+		Line:    line,
+		strict:  strict,
+	}
+
 }
 
 func (ps *Parser) Expression() Node {

@@ -52,6 +52,8 @@ const (
 	ELSE
 	FOR
 	VAR
+	RANGE
+	IN
 )
 
 func (tt TokenType) String() string {
@@ -61,5 +63,6 @@ func (tt TokenType) String() string {
 		"EXCL", "DOT", "PERCENT", "LBRACE", "RBRACE", "EQEQUAL", "NOTEQUAL",
 		"LESSEQUAL", "GREATEREQUAL", "TILDE", "CIRCUMFLEX", "DOUBLESTAR",
 		"PLUSEQUAL", "MINEQUAL", "STAREQUAL", "SLASHEQUAL", "PERCENTEQUAL",
-		"AMPEREQUAL", "VBAREQUAL", "COLONEQUAL", "CIRCUMFLEXEQUAL", "PRINT", "IF", "ELSE", "FOR", "VAR"}[tt]
+		"AMPEREQUAL", "VBAREQUAL", "COLONEQUAL", "CIRCUMFLEXEQUAL", "PRINT", "IF", "ELSE", "FOR",
+		"VAR", "RANGE", "IN"}[tt]
 }

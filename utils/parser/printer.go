@@ -67,7 +67,7 @@ func (w Printer) EnterNode(n Node) bool {
 
 	case *PrintNode:
 		color.Magenta("!--> Print Operator (Keyword) " + "Line " + strconv.Itoa(s.Line))
-		w.IndentLevel += 1
+		w.IndentLevel++
 		s.node.Walk(w)
 		return false
 
@@ -82,6 +82,13 @@ func (w Printer) EnterNode(n Node) bool {
 			s.elseStmt.Walk(w)
 		}
 
+		return false
+
+	case *ForNode:
+
+		color.Green("!--> For Block [iterVar '%s'] [%3.3f; %3.3f; %3.3f] Line: %d",
+			s.iterVar, s.start.AsNumber(), s.stop.AsNumber(), s.step.AsNumber(), s.Line)
+		s.stmt.Walk(w)
 		return false
 	}
 

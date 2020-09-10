@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+func BoolTernary(statement bool, a, b bool) bool {
+	if statement {
+		return a
+	}
+	return b
+}
+
 type Executor struct {
 	ctx   *BlockContext
 	stack *Stack
@@ -130,8 +137,11 @@ func (w Executor) EnterNode(n Node) bool {
 
 	case *PrintNode:
 		s.node.Walk(w)
-		res, _ := w.stack.Pop()
-		fmt.Println(res.AsString())
+		res, ok := w.stack.Pop()
+		if (res != nil) && ok {
+			fmt.Println(res.AsString())
+		}
+
 		return false
 
 	case *IfNode:
@@ -143,6 +153,18 @@ func (w Executor) EnterNode(n Node) bool {
 		} else if s.elseStmt != nil {
 			s.elseStmt.Walk(w)
 		}
+
+		return false
+	case *ForNode:
+
+		w.ctx.Vars[s.iterVar] = NumberValue{s.start.AsNumber()}
+
+		for i := s.start.AsNumber(); BoolTernary(s.strict, i <= s.stop.AsNumber(), i < s.stop.AsNumber()); i += s.step.AsNumber() {
+			s.stmt.Walk(w)
+			w.ctx.Vars[s.iterVar] = NumberValue{w.ctx.Vars[s.iterVar].AsNumber() + s.step.AsNumber()}
+		}
+
+		delete(w.ctx.Vars, s.iterVar)
 
 		return false
 	}

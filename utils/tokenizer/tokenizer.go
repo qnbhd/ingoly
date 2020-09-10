@@ -7,7 +7,7 @@ import (
 	"unicode"
 )
 
-const PIX = "+-*(){}[]:/=<>!&|"
+const PIX = "+-*(){}[]:;/=<>!&|"
 
 type Reserved struct {
 	Operators map[string]TokenType
@@ -74,6 +74,8 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["else"] = ELSE
 	ops.Operators["for"] = FOR
 	ops.Operators["var"] = VAR
+	ops.Operators["range"] = RANGE
+	ops.Operators["in"] = IN
 
 	return &ops
 }

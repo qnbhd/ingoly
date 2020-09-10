@@ -214,3 +214,23 @@ func (is *IfNode) Walk(v Visitor) {
 
 	v.LeaveNode(is)
 }
+
+type ForNode struct {
+	iterVar string
+	start   NumberValue
+	stop    NumberValue
+	step    NumberValue
+	strict  bool
+	stmt    Node
+	Line    int
+}
+
+func (fn *ForNode) Walk(v Visitor) {
+	if !v.EnterNode(fn) {
+		return
+	}
+
+	fn.stmt.Walk(v)
+
+	v.LeaveNode(fn)
+}
