@@ -42,5 +42,6 @@ func main() {
 
 	ast.Print()
 
-	//ast.Execute()
+	semanticPullError := ast.Execute()
+	semanticPullError.Print()
 }

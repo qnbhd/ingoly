@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"ingoly/utils/errpull"
 	"math"
 )
@@ -546,6 +547,26 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *PrintNode:
+		s.node.Walk(w)
+
+		op, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("using var before initialization")
+			w.CreatePullError(err, s.Line)
+		}
+
+		switch t := op.(type) {
+		case *IntNumber:
+			fmt.Println(t.value)
+		case *FloatNumber:
+			fmt.Println(t.value)
+		case *Boolean:
+			fmt.Println(t.value)
+		case *String:
+			fmt.Println(t.value)
+
+		}
 
 		return false
 
