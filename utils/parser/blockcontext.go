@@ -1,9 +1,9 @@
 package parser
 
 type BlockContext struct {
-	Vars map[string]ScopeVar
+	Vars map[string]Node
 }
 
 func NewBlockContext() *BlockContext {
-	return &BlockContext{Vars: make(map[string]ScopeVar)}
+	return &BlockContext{Vars: make(map[string]Node)}
 }

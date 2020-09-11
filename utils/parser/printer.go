@@ -55,19 +55,19 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *IntNumber:
-		color.Blue("!--> Integer Number (Number) Value: %d, Line: %d", s.value, s.Line)
+		color.Blue("!--> Integer (Number) Value: %d, Line: %d", s.value, s.Line)
 		return false
 
 	case *FloatNumber:
-		color.Blue("!--> Float Number (Number) Value: %3.3f, Line: %d", s.value, s.Line)
+		color.Blue("!--> Float (Number) Value: %3.3f, Line: %d", s.value, s.Line)
 		return false
 
 	case *String:
-		color.Blue("!--> String (Number) Value: %s, Line: %d", s.value, s.Line)
+		color.Blue("!--> String (String) Value: %s, Line: %d", s.value, s.Line)
 		return false
 
 	case *Boolean:
-		color.Blue("!--> Boolean (Number) Value: %t, Line: %d", s.value, s.Line)
+		color.Blue("!--> Boolean (Boolean) Value: %t, Line: %d", s.value, s.Line)
 		return false
 
 	case *ConditionalNode:
