@@ -3,36 +3,17 @@
 var x := 6
 var y := 6.89
 
-// if-else and logical expressions
+var z := "String"
 
-if (x > 3) && (y > 6) {
-    print("true")
-} else {
-    print("false")
+var w := true
+var u := false
+
+print(z)
+
+if x < y {
+    print(x+y)
 }
 
-// for cycle
-
-for i in [0; 5) {
-    print("Cycle 1 " + i)
+for u in [0.1; 11) {
+    print(u)
 }
-
-print("")
-
-for i in [0; 5] {
-    print("Cycle 2 " + i)
-}
-
-print("")
-
-for i in [0; 10; 2] {
-    print("Cycle 3 " + i)
-}
-
-// singe-comment
-
-/*
-multi-line comment
-*/
-
-

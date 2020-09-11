@@ -54,8 +54,20 @@ func (w Printer) EnterNode(n Node) bool {
 		color.Green("!--> Scope Variable (Value) '" + s.Name + "' " + "Line " + strconv.Itoa(s.Line))
 		return false
 
-	case *ValueNode:
-		color.Blue("!--> Value Node (Value) '" + s.value.AsString() + "' " + "Line " + strconv.Itoa(s.Line))
+	case *IntNumber:
+		color.Blue("!--> Integer Number (Number) Value: %d, Line: %d", s.value, s.Line)
+		return false
+
+	case *FloatNumber:
+		color.Blue("!--> Float Number (Number) Value: %3.3f, Line: %d", s.value, s.Line)
+		return false
+
+	case *String:
+		color.Blue("!--> String (Number) Value: %s, Line: %d", s.value, s.Line)
+		return false
+
+	case *Boolean:
+		color.Blue("!--> Boolean (Number) Value: %t, Line: %d", s.value, s.Line)
 		return false
 
 	case *ConditionalNode:
@@ -82,13 +94,31 @@ func (w Printer) EnterNode(n Node) bool {
 			s.elseStmt.Walk(w)
 		}
 
+		w.IndentLevel--
 		return false
 
 	case *ForNode:
+		color.Green("!--> For Block Line: %d", s.Line)
 
-		color.Green("!--> For Block [iterVar '%s'] [%3.3f; %3.3f; %3.3f] Line: %d",
-			s.iterVar, s.start.AsNumber(), s.stop.AsNumber(), s.step.AsNumber(), s.Line)
+		w.IndentLevel++
+
+		color.Green("!--> IterVar Section " + "Line " + strconv.Itoa(s.Line+1))
+		s.iterVar.Walk(w)
+
+		color.Green("!--> Start Section " + "Line " + strconv.Itoa(s.Line+1))
+		s.start.Walk(w)
+
+		color.Green("!--> Stop Section " + "Line " + strconv.Itoa(s.Line+1))
+		s.stop.Walk(w)
+
+		color.Green("!--> Step Section " + "Line " + strconv.Itoa(s.Line+1))
+		s.step.Walk(w)
+
+		w.IndentLevel--
+
+		color.Green("!--> Iter Code " + "Line " + strconv.Itoa(s.Line+1))
 		s.stmt.Walk(w)
+
 		return false
 	}
 

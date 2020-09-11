@@ -5,6 +5,7 @@ import (
 	"ingoly/utils/errpull"
 	"ingoly/utils/tokenizer"
 	"strconv"
+	"strings"
 )
 
 type Parser struct {
@@ -95,22 +96,21 @@ func (ps *Parser) IfElseBlock() Node {
 func (ps *Parser) ForBlock() Node {
 	line := ps.get(0).Line
 
-	iterVar, _ := ps.consume(tokenizer.NAME)
+	iterVar := ps.Expression()
 	ps.consume(tokenizer.IN)
 	ps.consume(tokenizer.LSQB)
 
-	startT, _ := ps.consume(tokenizer.NUMBER)
-	start, _ := strconv.ParseFloat(startT.Lexeme, 64)
-
+	start := ps.Expression()
 	ps.consume(tokenizer.SEMI)
-	stopT, _ := ps.consume(tokenizer.NUMBER)
-	stop, _ := strconv.ParseFloat(stopT.Lexeme, 64)
 
-	step := 1.
+	stop := ps.Expression()
+
+	var step Node
 	if ps.get(0).Type == tokenizer.SEMI {
 		ps.consume(tokenizer.SEMI)
-		stepT, _ := ps.consume(tokenizer.NUMBER)
-		step, _ = strconv.ParseFloat(stepT.Lexeme, 64)
+		step = ps.Expression()
+	} else {
+		step = &IntNumber{0, line}
 	}
 
 	strict := false
@@ -126,10 +126,10 @@ func (ps *Parser) ForBlock() Node {
 	stmt := ps.StatementOrBlock()
 
 	return &ForNode{
-		iterVar: iterVar.Lexeme,
-		start:   NumberValue{start},
-		stop:    NumberValue{stop},
-		step:    NumberValue{step},
+		iterVar: iterVar,
+		start:   start,
+		stop:    stop,
+		step:    step,
 		stmt:    stmt,
 		Line:    line,
 		strict:  strict,
@@ -272,16 +272,26 @@ func (ps *Parser) PRIMARY() Node {
 	line := current.Line
 
 	if ps.match(tokenizer.NUMBER) {
-		lex, _ := strconv.ParseFloat(current.Lexeme, 64)
-		return &ValueNode{value: NumberValue{lex}, Line: line}
+		if strings.Index(current.Lexeme, ".") != -1 {
+			value, _ := strconv.ParseFloat(current.Lexeme, 64)
+			return &FloatNumber{value: value, Line: line}
+		}
+		value, _ := strconv.Atoi(current.Lexeme)
+		return &IntNumber{value: value, Line: line}
 	}
 	if ps.match(tokenizer.STRING) {
-		return &ValueNode{value: StringValue{value: current.Lexeme}, Line: line}
+		return &String{value: current.Lexeme, Line: line}
 	}
 	if ps.match(tokenizer.LPAR) {
 		result := ps.Expression()
 		ps.consume(tokenizer.RPAR)
 		return result
+	}
+	if ps.match(tokenizer.TRUE) {
+		return &Boolean{value: true}
+	}
+	if ps.match(tokenizer.FALSE) {
+		return &Boolean{value: false}
 	}
 	if ps.match(tokenizer.NAME) {
 		return &UsingVariableNode{name: current.Lexeme, Line: line}

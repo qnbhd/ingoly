@@ -42,6 +42,8 @@ func (bn *BlockNode) Walk(v Visitor) {
 	for _, node := range bn.Nodes {
 		node.Walk(v)
 	}
+
+	v.LeaveNode(bn)
 }
 
 type ScopeVar struct {
@@ -112,23 +114,6 @@ func (uvn *UsingVariableNode) Walk(v Visitor) {
 	}
 
 	v.LeaveNode(uvn)
-}
-
-///////////////
-
-/* Value Node */
-
-type ValueNode struct {
-	value Value
-	Line  int
-}
-
-func (vn *ValueNode) Walk(v Visitor) {
-	if !v.EnterNode(vn) {
-		return
-	}
-
-	v.LeaveNode(vn)
 }
 
 ////////////////
@@ -216,10 +201,10 @@ func (is *IfNode) Walk(v Visitor) {
 }
 
 type ForNode struct {
-	iterVar string
-	start   NumberValue
-	stop    NumberValue
-	step    NumberValue
+	iterVar Node
+	start   Node
+	stop    Node
+	step    Node
 	strict  bool
 	stmt    Node
 	Line    int
@@ -230,7 +215,11 @@ func (fn *ForNode) Walk(v Visitor) {
 		return
 	}
 
+	fn.iterVar.Walk(v)
 	fn.stmt.Walk(v)
+	fn.start.Walk(v)
+	fn.stop.Walk(v)
+	fn.step.Walk(v)
 
 	v.LeaveNode(fn)
 }

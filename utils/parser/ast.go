@@ -11,9 +11,9 @@ func (ast *Ast) Print() {
 	}
 }
 
-func (ast *Ast) Execute() {
-	p := NewExecutor()
-	for _, stmt := range ast.Tree {
-		stmt.Walk(p)
-	}
-}
+//func (ast *Ast) Execute() {
+//	p := NewExecutor()
+//	for _, stmt := range ast.Tree {
+//		stmt.Walk(p)
+//	}
+//}

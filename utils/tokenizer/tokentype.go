@@ -54,6 +54,8 @@ const (
 	VAR
 	RANGE
 	IN
+	TRUE
+	FALSE
 )
 
 func (tt TokenType) String() string {
@@ -64,5 +66,5 @@ func (tt TokenType) String() string {
 		"LESSEQUAL", "GREATEREQUAL", "TILDE", "CIRCUMFLEX", "DOUBLESTAR",
 		"PLUSEQUAL", "MINEQUAL", "STAREQUAL", "SLASHEQUAL", "PERCENTEQUAL",
 		"AMPEREQUAL", "VBAREQUAL", "COLONEQUAL", "CIRCUMFLEXEQUAL", "PRINT", "IF", "ELSE", "FOR",
-		"VAR", "RANGE", "IN"}[tt]
+		"VAR", "RANGE", "IN", "TRUE", "FALSE"}[tt]
 }

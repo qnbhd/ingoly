@@ -42,5 +42,5 @@ func main() {
 
 	ast.Print()
 
-	ast.Execute()
+	//ast.Execute()
 }
