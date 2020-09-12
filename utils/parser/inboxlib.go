@@ -1,6 +1,14 @@
 package parser
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"math"
+)
+
+func __DummyF64(arg float64) float64 {
+	return arg
+}
 
 func __InBoxPrint(w Executor, curNode, opNode Node, line int) {
 
@@ -45,4 +53,39 @@ func __InBoxType(w Executor, curNode, opNode Node, line int) {
 	}
 
 	w.stack.Push(&String{result, line})
+}
+
+func __InBoxMathFunc(w Executor, curNode, opNode Node, line int, funcName string) {
+
+	var target float64
+	switch op := opNode.(type) {
+	case *IntNumber:
+		target = float64(op.value)
+	case *FloatNumber:
+		target = op.value
+	case *Boolean:
+		err := errors.New("invalid argument for func")
+		w.CreatePullError(err, line)
+		return
+	case *String:
+		err := errors.New("invalid argument for func")
+		w.CreatePullError(err, line)
+		return
+	}
+
+	var functor func(float64) float64
+	switch funcName {
+	case "sin":
+		functor = math.Sin
+	case "cos":
+		functor = math.Cos
+	case "tan":
+		functor = math.Tan
+	case "sqrt":
+		functor = math.Sqrt
+	default:
+		functor = __DummyF64
+	}
+
+	w.stack.Push(&FloatNumber{functor(target), line})
 }

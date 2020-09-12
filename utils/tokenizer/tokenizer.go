@@ -69,8 +69,6 @@ func GetReservedKeywords() *Reserved {
 	var ops Reserved
 	ops.Operators = map[string]TokenType{}
 
-	ops.Operators["print"] = PRINT
-	ops.Operators["println"] = PRINTLN
 	ops.Operators["if"] = IF
 	ops.Operators["else"] = ELSE
 	ops.Operators["for"] = FOR
@@ -79,7 +77,6 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["in"] = IN
 	ops.Operators["true"] = TRUE
 	ops.Operators["false"] = FALSE
-	ops.Operators["type"] = TYPE
 
 	return &ops
 }

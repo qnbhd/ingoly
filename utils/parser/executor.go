@@ -37,17 +37,19 @@ func (w Executor) EnterNode(n Node) bool {
 		s.op1.Walk(w)
 		op1, ok := w.stack.Pop()
 
-		if !ok {
+		if op1 == nil || !ok {
 			err := errors.New("using var before initialization")
 			w.CreatePullError(err, s.Line)
+			return false
 		}
 
 		s.op2.Walk(w)
 		op2, ok := w.stack.Pop()
 
-		if !ok {
+		if op2 == nil || !ok {
 			err := errors.New("using var before initialization")
 			w.CreatePullError(err, s.Line)
+			return false
 		}
 
 		switch __T1 := op1.(type) {
@@ -491,7 +493,7 @@ func (w Executor) EnterNode(n Node) bool {
 		s.Walk(w)
 		op1, ok := w.stack.Pop()
 
-		if !ok {
+		if op1 == nil || !ok {
 			err := errors.New("using var before initialization")
 			w.CreatePullError(err, s.Line)
 		}
@@ -546,17 +548,19 @@ func (w Executor) EnterNode(n Node) bool {
 		s.op1.Walk(w)
 		op1, ok := w.stack.Pop()
 
-		if !ok {
+		if op1 == nil || !ok {
 			err := errors.New("using var before initialization")
 			w.CreatePullError(err, s.Line)
+			return false
 		}
 
 		s.op2.Walk(w)
 		op2, ok := w.stack.Pop()
 
-		if !ok {
+		if op2 == nil || !ok {
 			err := errors.New("using var before initialization")
 			w.CreatePullError(err, s.Line)
+			return false
 		}
 
 		var __CmpOp1, __CmpOp2 float64
@@ -689,9 +693,10 @@ func (w Executor) EnterNode(n Node) bool {
 
 		op, ok := w.stack.Pop()
 
-		if !ok {
+		if op == nil || !ok {
 			err := errors.New("using var before initialization")
 			w.CreatePullError(err, s.Line)
+			return false
 		}
 
 		switch s.operator {
@@ -701,6 +706,14 @@ func (w Executor) EnterNode(n Node) bool {
 			__InBoxPrintln(w, s, op, s.Line)
 		case "type":
 			__InBoxType(w, s, op, s.Line)
+		case "sin":
+			fallthrough
+		case "cos":
+			fallthrough
+		case "tan":
+			fallthrough
+		case "sqrt":
+			__InBoxMathFunc(w, s, op, s.Line, s.operator)
 		default:
 			err := errors.New("unknown function operator")
 			w.CreatePullError(err, s.Line)
@@ -713,7 +726,7 @@ func (w Executor) EnterNode(n Node) bool {
 		s.node.Walk(w)
 		condition, ok := w.stack.Pop()
 
-		if !ok {
+		if condition == nil || !ok {
 			err := errors.New("condition expected")
 			w.CreatePullError(err, s.Line)
 			return false
@@ -740,7 +753,7 @@ func (w Executor) EnterNode(n Node) bool {
 		s.start.Walk(w)
 		startNode, ok := w.stack.Pop()
 
-		if !ok {
+		if startNode == nil || !ok {
 			err := errors.New("loop start expected")
 			w.CreatePullError(err, s.Line)
 			return false
@@ -751,7 +764,7 @@ func (w Executor) EnterNode(n Node) bool {
 		s.stop.Walk(w)
 		stopNode, ok := w.stack.Pop()
 
-		if !ok {
+		if stopNode == nil || !ok {
 			err := errors.New("loop stop expected")
 			w.CreatePullError(err, s.Line)
 			return false
@@ -760,7 +773,7 @@ func (w Executor) EnterNode(n Node) bool {
 		s.step.Walk(w)
 		stepNode, ok := w.stack.Pop()
 
-		if !ok {
+		if stepNode == nil || !ok {
 			err := errors.New("loop step expected")
 			w.CreatePullError(err, s.Line)
 			return false

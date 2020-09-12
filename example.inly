@@ -1,9 +1,3 @@
-// variable declarations
-
-var x := 6
-var y := true
-var tt := type(x)
-
-for i in [0; 5) {
-    println(type(1))
+for x in [0.0; 10.0; 0.5] {
+    println(sin("hello"))
 }

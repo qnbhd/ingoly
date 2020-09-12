@@ -1,6 +1,9 @@
 package parser
 
-import "ingoly/utils/errpull"
+import (
+	"fmt"
+	"ingoly/utils/errpull"
+)
 
 type Ast struct {
 	Tree []Node
@@ -18,5 +21,20 @@ func (ast *Ast) Execute() *errpull.ErrorsPull {
 	for _, stmt := range ast.Tree {
 		stmt.Walk(p)
 	}
+
+	unique := map[string]string{}
+	var filteredPull []errpull.InnerError
+
+	for _, err := range p.ErrorsPull.Errors {
+		errTrace := fmt.Sprintf("%q", err.Err)
+		errLine := fmt.Sprintf("%d", err.SourceLine)
+		hash := errTrace + errLine
+		if _, ok := unique[hash]; !ok {
+			unique[hash] = ""
+			filteredPull = append(filteredPull, err)
+		}
+	}
+
+	p.ErrorsPull.Errors = filteredPull
 	return p.ErrorsPull
 }

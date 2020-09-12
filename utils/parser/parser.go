@@ -8,6 +8,22 @@ import (
 	"strings"
 )
 
+var __reservedKeywords = []string{
+	"print",
+	"println",
+	"type",
+	"sin",
+	"cos"}
+
+func contains(s []string, searchTerm string) bool {
+	for _, item := range s {
+		if item == searchTerm {
+			return true
+		}
+	}
+	return false
+}
+
 type Parser struct {
 	Tokens     []tokenizer.Token
 	variables  *BlockContext
@@ -140,14 +156,11 @@ func (ps *Parser) Expression() Node {
 func (ps *Parser) Keyword() Node {
 	line := ps.get(0).Line
 
-	if ps.match(tokenizer.PRINT) {
-		res := &KeywordOperatorNode{node: ps.Expression(), operator: "print", Line: line}
-		return res
-	} else if ps.match(tokenizer.PRINTLN) {
-		res := &KeywordOperatorNode{node: ps.Expression(), operator: "println", Line: line}
-		return res
-	} else if ps.match(tokenizer.TYPE) {
-		res := &KeywordOperatorNode{node: ps.Expression(), operator: "type", Line: line}
+	targetFuncName := ps.get(0).Lexeme
+
+	if contains(__reservedKeywords, targetFuncName) {
+		ps.consume(tokenizer.NAME)
+		res := &KeywordOperatorNode{ps.Expression(), targetFuncName, line}
 		return res
 	}
 
