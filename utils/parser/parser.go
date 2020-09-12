@@ -96,7 +96,7 @@ func (ps *Parser) IfElseBlock() Node {
 func (ps *Parser) ForBlock() Node {
 	line := ps.get(0).Line
 
-	iterVar := ps.Expression()
+	iterVar, _ := ps.consume(tokenizer.NAME)
 	ps.consume(tokenizer.IN)
 	ps.consume(tokenizer.LSQB)
 
@@ -110,7 +110,7 @@ func (ps *Parser) ForBlock() Node {
 		ps.consume(tokenizer.SEMI)
 		step = ps.Expression()
 	} else {
-		step = &IntNumber{0, line}
+		step = &IntNumber{1, line}
 	}
 
 	strict := false
@@ -126,7 +126,7 @@ func (ps *Parser) ForBlock() Node {
 	stmt := ps.StatementOrBlock()
 
 	return &ForNode{
-		iterVar: iterVar,
+		iterVar: iterVar.Lexeme,
 		start:   start,
 		stop:    stop,
 		step:    step,

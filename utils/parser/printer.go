@@ -98,12 +98,9 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *ForNode:
-		color.Green("!--> For Block Line: %d", s.Line)
+		color.Green("!--> For Block [IterVar: '%s'] Line: %d", s.iterVar, s.Line)
 
 		w.IndentLevel++
-
-		color.Green("!--> IterVar Section " + "Line " + strconv.Itoa(s.Line+1))
-		s.iterVar.Walk(w)
 
 		color.Green("!--> Start Section " + "Line " + strconv.Itoa(s.Line+1))
 		s.start.Walk(w)

@@ -201,7 +201,7 @@ func (is *IfNode) Walk(v Visitor) {
 }
 
 type ForNode struct {
-	iterVar Node
+	iterVar string
 	start   Node
 	stop    Node
 	step    Node
@@ -215,7 +215,6 @@ func (fn *ForNode) Walk(v Visitor) {
 		return
 	}
 
-	fn.iterVar.Walk(v)
 	fn.stmt.Walk(v)
 	fn.start.Walk(v)
 	fn.stop.Walk(v)

@@ -544,6 +544,145 @@ func (w Executor) EnterNode(n Node) bool {
 
 	case *ConditionalNode:
 
+		s.op1.Walk(w)
+		op1, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("using var before initialization")
+			w.CreatePullError(err, s.Line)
+		}
+
+		s.op2.Walk(w)
+		op2, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("using var before initialization")
+			w.CreatePullError(err, s.Line)
+		}
+
+		var __CmpOp1, __CmpOp2 float64
+
+		switch __T1 := op1.(type) {
+		case *IntNumber:
+			switch __T2 := op2.(type) {
+			case *IntNumber:
+				__CmpOp1 = float64(__T1.value)
+				__CmpOp2 = float64(__T2.value)
+			case *FloatNumber:
+				__CmpOp1 = float64(__T1.value)
+				__CmpOp2 = __T2.value
+			case *Boolean:
+				__CmpOp1 = float64(__T1.value)
+				switch __T2.value {
+				case true:
+					__CmpOp2 = 1.0
+				case false:
+					__CmpOp2 = 0.0
+				}
+			case *String:
+				err := errors.New("invalid condition operation between int and string")
+				w.CreatePullError(err, s.Line)
+			}
+		case *FloatNumber:
+			switch __T2 := op2.(type) {
+			case *IntNumber:
+				__CmpOp1 = __T1.value
+				__CmpOp2 = float64(__T2.value)
+			case *FloatNumber:
+				__CmpOp1 = __T1.value
+				__CmpOp2 = __T2.value
+			case *Boolean:
+				__CmpOp1 = __T1.value
+				switch __T2.value {
+				case true:
+					__CmpOp2 = 1.0
+				case false:
+					__CmpOp2 = 0.0
+				}
+			case *String:
+				err := errors.New("invalid condition operation between int and string")
+				w.CreatePullError(err, s.Line)
+			}
+		case *Boolean:
+			switch __T2 := op2.(type) {
+			case *IntNumber:
+				switch __T1.value {
+				case true:
+					__CmpOp1 = 1.0
+				case false:
+					__CmpOp1 = 0.0
+				}
+				__CmpOp2 = float64(__T2.value)
+			case *FloatNumber:
+				switch __T1.value {
+				case true:
+					__CmpOp1 = 1.0
+				case false:
+					__CmpOp1 = 0.0
+				}
+				__CmpOp2 = __T2.value
+			case *Boolean:
+				switch __T1.value {
+				case true:
+					__CmpOp1 = 1.0
+				case false:
+					__CmpOp1 = 0.0
+				}
+				switch __T2.value {
+				case true:
+					__CmpOp2 = 1.0
+				case false:
+					__CmpOp2 = 0.0
+				}
+			case *String:
+				err := errors.New("invalid condition operation between int and string")
+				w.CreatePullError(err, s.Line)
+			}
+
+		case *String:
+			switch __T2 := op2.(type) {
+			case *String:
+				switch __T1.value == __T2.value {
+				case true:
+					__CmpOp1 = 1.0
+				case false:
+					__CmpOp1 = 0.0
+				}
+				__CmpOp2 = 0.0
+			case *IntNumber:
+				err := errors.New("invalid condition operation between string and int")
+				w.CreatePullError(err, s.Line)
+			case *FloatNumber:
+				err := errors.New("invalid condition operation between string and float")
+				w.CreatePullError(err, s.Line)
+			case *Boolean:
+				err := errors.New("invalid condition operation between string and boolean")
+				w.CreatePullError(err, s.Line)
+			}
+		}
+
+		var result bool
+		switch s.operation {
+		case "==":
+			result = __CmpOp1 == __CmpOp2
+		case "!=":
+			result = __CmpOp1 != __CmpOp2
+		case "<":
+			result = __CmpOp1 < __CmpOp2
+		case ">":
+			result = __CmpOp1 > __CmpOp2
+		case "<=":
+			result = __CmpOp1 <= __CmpOp2
+		case ">=":
+			result = __CmpOp1 >= __CmpOp2
+		case "&&":
+			result = (__CmpOp1 != 0) && (__CmpOp2 != 0)
+		case "||":
+			result = (__CmpOp1 != 0) && (__CmpOp2 != 0)
+		}
+
+		w.stack.Push(&Boolean{result, s.Line})
+
 		return false
 
 	case *PrintNode:
@@ -572,9 +711,172 @@ func (w Executor) EnterNode(n Node) bool {
 
 	case *IfNode:
 
+		s.node.Walk(w)
+		condition, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("condition expected")
+			w.CreatePullError(err, s.Line)
+			return false
+		}
+
+		switch result := condition.(type) {
+		case *Boolean:
+			conditionResult := result.value
+			if conditionResult {
+				s.ifStmt.Walk(w)
+			} else if s.elseStmt != nil {
+				s.elseStmt.Walk(w)
+			}
+			return false
+		}
+
+		err := errors.New("invalid condition")
+		w.CreatePullError(err, s.Line)
+
 		return false
 
 	case *ForNode:
+
+		s.start.Walk(w)
+		startNode, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("loop start expected")
+			w.CreatePullError(err, s.Line)
+			return false
+		}
+
+		w.ctx.Vars[s.iterVar] = startNode
+
+		s.stop.Walk(w)
+		stopNode, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("loop stop expected")
+			w.CreatePullError(err, s.Line)
+			return false
+		}
+
+		s.step.Walk(w)
+		stepNode, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("loop step expected")
+			w.CreatePullError(err, s.Line)
+			return false
+		}
+
+		switch st := startNode.(type) {
+		case *IntNumber:
+			start := st.value
+			switch st := stopNode.(type) {
+			case *IntNumber:
+				stop := st.value
+				switch st := stepNode.(type) {
+				case *IntNumber:
+					step := st.value
+					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += step {
+						w.ctx.Vars[s.iterVar] = &IntNumber{i, s.Line}
+						s.stmt.Walk(w)
+
+					}
+				case *FloatNumber:
+					step := st.value
+					stepCasted := int(step)
+					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
+						w.ctx.Vars[s.iterVar] = &IntNumber{i, s.Line}
+						s.stmt.Walk(w)
+					}
+				default:
+					err := errors.New("invalid loop step")
+					w.CreatePullError(err, s.Line)
+				}
+
+			case *FloatNumber:
+				stop := st.value
+				switch st := stepNode.(type) {
+				case *IntNumber:
+					step := st.value
+					startCasted := float64(start)
+					stepCasted := float64(step)
+					for i := startCasted; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
+						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
+						s.stmt.Walk(w)
+					}
+				case *FloatNumber:
+					step := st.value
+					for i := float64(start); BoolTernary(s.strict, i <= stop, i < stop); i += step {
+						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
+						s.stmt.Walk(w)
+					}
+				default:
+					err := errors.New("invalid loop step")
+					w.CreatePullError(err, s.Line)
+				}
+
+			default:
+				err := errors.New("invalid loop stop")
+				w.CreatePullError(err, s.Line)
+			}
+		case *FloatNumber:
+			start := st.value
+			switch st := stopNode.(type) {
+			case *IntNumber:
+				stop := st.value
+				switch st := stepNode.(type) {
+				case *IntNumber:
+					step := st.value
+					stopCasted := float64(stop)
+					stepCasted := float64(step)
+					for i := start; BoolTernary(s.strict, i <= stopCasted, i < stopCasted); i += stepCasted {
+						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
+						s.stmt.Walk(w)
+					}
+				case *FloatNumber:
+					step := st.value
+					stopCasted := float64(stop)
+					for i := start; BoolTernary(s.strict, i <= stopCasted, i < stopCasted); i += step {
+						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
+						s.stmt.Walk(w)
+					}
+				default:
+					err := errors.New("invalid loop step")
+					w.CreatePullError(err, s.Line)
+				}
+
+			case *FloatNumber:
+				stop := st.value
+				switch st := stepNode.(type) {
+				case *IntNumber:
+					step := st.value
+					stepCasted := float64(step)
+					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
+						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
+						s.stmt.Walk(w)
+					}
+				case *FloatNumber:
+					step := st.value
+					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += step {
+						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
+						s.stmt.Walk(w)
+					}
+				default:
+					err := errors.New("invalid loop step")
+					w.CreatePullError(err, s.Line)
+				}
+
+			default:
+				err := errors.New("invalid loop stop")
+				w.CreatePullError(err, s.Line)
+			}
+		default:
+
+			err := errors.New("invalid loop start")
+			w.CreatePullError(err, s.Line)
+		}
+
+		delete(w.ctx.Vars, s.iterVar)
 
 		return false
 	}

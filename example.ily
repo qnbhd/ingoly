@@ -1,5 +1,8 @@
 // variable declarations
 
-var x := false * 5.7
+var x := 6
+var y := true
 
-print(x)
+if (x <= 6 && x < 10) && y != true {
+    print(x)
+}
