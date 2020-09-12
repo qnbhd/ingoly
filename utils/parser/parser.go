@@ -141,10 +141,13 @@ func (ps *Parser) Keyword() Node {
 	line := ps.get(0).Line
 
 	if ps.match(tokenizer.PRINT) {
-		res := &PrintNode{node: ps.Expression(), Line: line}
+		res := &KeywordOperatorNode{node: ps.Expression(), operator: "print", Line: line}
+		return res
+	} else if ps.match(tokenizer.PRINTLN) {
+		res := &KeywordOperatorNode{node: ps.Expression(), operator: "println", Line: line}
 		return res
 	} else if ps.match(tokenizer.TYPE) {
-		res := &TypeNode{node: ps.Expression(), Line: line}
+		res := &KeywordOperatorNode{node: ps.Expression(), operator: "type", Line: line}
 		return res
 	}
 

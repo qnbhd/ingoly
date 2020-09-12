@@ -4,4 +4,6 @@ var x := 6
 var y := true
 var tt := type(x)
 
-print(tt)
+for i in [0; 5) {
+    println(type(1))
+}

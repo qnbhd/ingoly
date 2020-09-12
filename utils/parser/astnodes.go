@@ -162,12 +162,13 @@ func (as *DeclarationNode) Walk(v Visitor) {
 
 /* Print Node */
 
-type PrintNode struct {
-	node Node
-	Line int
+type KeywordOperatorNode struct {
+	node     Node
+	operator string
+	Line     int
 }
 
-func (ps *PrintNode) Walk(v Visitor) {
+func (ps *KeywordOperatorNode) Walk(v Visitor) {
 	if !v.EnterNode(ps) {
 		return
 	}
@@ -221,19 +222,4 @@ func (fn *ForNode) Walk(v Visitor) {
 	fn.step.Walk(v)
 
 	v.LeaveNode(fn)
-}
-
-type TypeNode struct {
-	node Node
-	Line int
-}
-
-func (tn *TypeNode) Walk(v Visitor) {
-	if !v.EnterNode(tn) {
-		return
-	}
-
-	tn.node.Walk(v)
-
-	v.LeaveNode(tn)
 }

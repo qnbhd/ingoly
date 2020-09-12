@@ -77,14 +77,8 @@ func (w Printer) EnterNode(n Node) bool {
 		s.op2.Walk(w)
 		return false
 
-	case *PrintNode:
-		color.Magenta("!--> Print Operator (Keyword) " + "Line " + strconv.Itoa(s.Line))
-		w.IndentLevel++
-		s.node.Walk(w)
-		return false
-
-	case *TypeNode:
-		color.Magenta("!--> Type Operator (Keyword) " + "Line " + strconv.Itoa(s.Line))
+	case *KeywordOperatorNode:
+		color.Magenta("!--> %s Operator (Keyword) "+"Line "+strconv.Itoa(s.Line), s.operator)
 		w.IndentLevel++
 		s.node.Walk(w)
 		return false

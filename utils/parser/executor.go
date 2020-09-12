@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"fmt"
 	"ingoly/utils/errpull"
 	"math"
 )
@@ -685,7 +684,7 @@ func (w Executor) EnterNode(n Node) bool {
 
 		return false
 
-	case *PrintNode:
+	case *KeywordOperatorNode:
 		s.node.Walk(w)
 
 		op, ok := w.stack.Pop()
@@ -695,43 +694,18 @@ func (w Executor) EnterNode(n Node) bool {
 			w.CreatePullError(err, s.Line)
 		}
 
-		switch t := op.(type) {
-		case *IntNumber:
-			fmt.Println(t.value)
-		case *FloatNumber:
-			fmt.Println(t.value)
-		case *Boolean:
-			fmt.Println(t.value)
-		case *String:
-			fmt.Println(t.value)
-
-		}
-
-		return false
-
-	case *TypeNode:
-		s.node.Walk(w)
-
-		op, ok := w.stack.Pop()
-
-		if !ok {
-			err := errors.New("using var before initialization")
+		switch s.operator {
+		case "print":
+			__InBoxPrint(w, s, op, s.Line)
+		case "println":
+			__InBoxPrintln(w, s, op, s.Line)
+		case "type":
+			__InBoxType(w, s, op, s.Line)
+		default:
+			err := errors.New("unknown function operator")
 			w.CreatePullError(err, s.Line)
 		}
 
-		var result string
-		switch op.(type) {
-		case *IntNumber:
-			result = "int"
-		case *FloatNumber:
-			result = "float"
-		case *Boolean:
-			result = "boolean"
-		case *String:
-			result = "string"
-		}
-
-		w.stack.Push(&String{result, s.Line})
 		return false
 
 	case *IfNode:
