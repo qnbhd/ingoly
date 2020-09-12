@@ -648,10 +648,12 @@ func (w Executor) EnterNode(n Node) bool {
 				switch __T1.value == __T2.value {
 				case true:
 					__CmpOp1 = 1.0
+					__CmpOp2 = 1.0
 				case false:
 					__CmpOp1 = 0.0
+					__CmpOp2 = 0.0
 				}
-				__CmpOp2 = 0.0
+
 			case *IntNumber:
 				err := errors.New("invalid condition operation between string and int")
 				w.CreatePullError(err, s.Line)
@@ -714,6 +716,14 @@ func (w Executor) EnterNode(n Node) bool {
 			fallthrough
 		case "sqrt":
 			__InBoxMathFunc(w, s, op, s.Line, s.operator)
+		case "int":
+			fallthrough
+		case "float":
+			fallthrough
+		case "boolean":
+			fallthrough
+		case "string":
+			__TypeCastingFunc(w, s, op, s.Line, s.operator)
 		default:
 			err := errors.New("unknown function operator")
 			w.CreatePullError(err, s.Line)

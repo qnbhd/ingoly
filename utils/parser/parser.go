@@ -13,7 +13,11 @@ var __reservedKeywords = []string{
 	"println",
 	"type",
 	"sin",
-	"cos"}
+	"cos",
+	"int",
+	"float",
+	"boolean",
+	"string"}
 
 func contains(s []string, searchTerm string) bool {
 	for _, item := range s {
@@ -150,20 +154,6 @@ func (ps *Parser) ForBlock() Node {
 }
 
 func (ps *Parser) Expression() Node {
-	return ps.Keyword()
-}
-
-func (ps *Parser) Keyword() Node {
-	line := ps.get(0).Line
-
-	targetFuncName := ps.get(0).Lexeme
-
-	if contains(__reservedKeywords, targetFuncName) {
-		ps.consume(tokenizer.NAME)
-		res := &KeywordOperatorNode{ps.Expression(), targetFuncName, line}
-		return res
-	}
-
 	return ps.LogicalOr()
 }
 
@@ -318,6 +308,12 @@ func (ps *Parser) PRIMARY() Node {
 	}
 	if ps.match(tokenizer.FALSE) {
 		return &Boolean{value: false}
+	}
+	targetFuncName := ps.get(0).Lexeme
+	if ps.get(0).Type != tokenizer.STRING && contains(__reservedKeywords, targetFuncName) {
+		ps.consume(tokenizer.NAME)
+		res := &KeywordOperatorNode{ps.Expression(), targetFuncName, line}
+		return res
 	}
 	if ps.match(tokenizer.NAME) {
 		return &UsingVariableNode{name: current.Lexeme, Line: line}

@@ -1,3 +1,8 @@
-for x in [0.0; 10.0; 0.5] {
-    println(sin("hello"))
+var z := "string"
+println(z)
+println(type(type(type(type(z)))))
+if z == type(z)
+    println("HW")
+for i in [0; 10) {
+    println("Это строка с номером " + string(i))
 }
