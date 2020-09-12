@@ -158,6 +158,22 @@ func (as *DeclarationNode) Walk(v Visitor) {
 	v.LeaveNode(as)
 }
 
+type AssignNode struct {
+	Variable   string
+	Expression Node
+	Line       int
+}
+
+func (as *AssignNode) Walk(v Visitor) {
+	if !v.EnterNode(as) {
+		return
+	}
+
+	as.Expression.Walk(v)
+
+	v.LeaveNode(as)
+}
+
 //////////////////
 
 /* Print Node */
@@ -222,4 +238,45 @@ func (fn *ForNode) Walk(v Visitor) {
 	fn.step.Walk(v)
 
 	v.LeaveNode(fn)
+}
+
+type While struct {
+	condition Node
+	stmt      Node
+	Line      int
+}
+
+func (w *While) Walk(v Visitor) {
+	if !v.EnterNode(w) {
+		return
+	}
+
+	w.condition.Walk(v)
+	w.stmt.Walk(v)
+
+	v.LeaveNode(w)
+}
+
+type Break struct {
+	Line int
+}
+
+func (b *Break) Walk(v Visitor) {
+	if !v.EnterNode(b) {
+		return
+	}
+
+	v.LeaveNode(b)
+}
+
+type Continue struct {
+	Line int
+}
+
+func (b *Continue) Walk(v Visitor) {
+	if !v.EnterNode(b) {
+		return
+	}
+
+	v.LeaveNode(b)
 }

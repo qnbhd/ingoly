@@ -1,4 +1,3 @@
-var z := "string"
-var formatted := string(1) + " 1 " + string(7.1) + " " + string(type("string")) + " **" * 5
+var z := 1
 
-print(formatted)
+z = "Hello"

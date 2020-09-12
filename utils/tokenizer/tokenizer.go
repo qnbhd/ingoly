@@ -77,6 +77,9 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["in"] = IN
 	ops.Operators["true"] = TRUE
 	ops.Operators["false"] = FALSE
+	ops.Operators["break"] = BREAK
+	ops.Operators["continue"] = CONTINUE
+	ops.Operators["while"] = WHILE
 
 	return &ops
 }

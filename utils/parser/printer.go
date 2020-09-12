@@ -40,6 +40,12 @@ func (w Printer) EnterNode(n Node) bool {
 		s.Expression.Walk(w)
 		return false
 
+	case *AssignNode:
+		color.Green("!--> Assign Variable Parse (Parse) var '" + s.Variable + "' " + "Line " + strconv.Itoa(s.Line))
+		w.IndentLevel++
+		s.Expression.Walk(w)
+		return false
+
 	case *UnaryNode:
 		color.Green("!--> Unary Operation (Operation) '" + s.operation + "' " + "Line " + strconv.Itoa(s.Line))
 		w.IndentLevel++
@@ -114,6 +120,27 @@ func (w Printer) EnterNode(n Node) bool {
 		w.IndentLevel--
 
 		color.Green("!--> Iter Code " + "Line " + strconv.Itoa(s.Line+1))
+		s.stmt.Walk(w)
+
+		return false
+
+	case *Break:
+		color.HiCyan("!--> Break (Statement)" + "Line " + strconv.Itoa(s.Line+1))
+		return false
+
+	case *Continue:
+		color.HiCyan("!--> Continue (Statement)" + "Line " + strconv.Itoa(s.Line+1))
+		return false
+
+	case *While:
+		color.Green("!--> While Block (Statement) Line: %d", s.Line)
+
+		w.IndentLevel++
+
+		color.Green("!--> Cycle condition " + "Line " + strconv.Itoa(s.Line+1))
+		s.condition.Walk(w)
+
+		color.Green("!--> Cycle Statement " + "Line " + strconv.Itoa(s.Line+1))
 		s.stmt.Walk(w)
 
 		return false

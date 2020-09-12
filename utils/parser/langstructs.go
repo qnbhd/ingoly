@@ -8,6 +8,12 @@ func (ps *Parser) Node() Node {
 		return ps.IfElseBlock()
 	} else if ps.match(tokenizer.FOR) {
 		return ps.ForBlock()
+	} else if ps.match(tokenizer.WHILE) {
+		return ps.While()
+	} else if ps.match(tokenizer.BREAK) {
+		return &Break{Line: ps.get(0).Line}
+	} else if ps.match(tokenizer.CONTINUE) {
+		return &Continue{Line: ps.get(0).Line}
 	}
 	return ps.AssignNode()
 }
@@ -23,6 +29,14 @@ func (ps *Parser) AssignNode() Node {
 		_, ok := ps.consume(tokenizer.COLONEQUAL)
 		if ok == nil {
 			return &DeclarationNode{Variable: variable, Expression: ps.Expression(), Line: line}
+		}
+	} else if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.EQUAL {
+		line := ps.get(0).Line
+		variable := ps.get(0).Lexeme
+		ps.consume(tokenizer.NAME)
+		_, ok := ps.consume(tokenizer.EQUAL)
+		if ok == nil {
+			return &AssignNode{Variable: variable, Expression: ps.Expression(), Line: line}
 		}
 	}
 
@@ -96,4 +110,10 @@ func (ps *Parser) ForBlock() Node {
 		strict:  strict,
 	}
 
+}
+
+func (ps *Parser) While() Node {
+	condition := ps.Expression()
+	stmt := ps.StatementOrBlock()
+	return &While{condition, stmt, ps.get(0).Line}
 }

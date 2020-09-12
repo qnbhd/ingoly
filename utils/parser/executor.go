@@ -489,6 +489,75 @@ func (w Executor) EnterNode(n Node) bool {
 		w.ctx.Vars[s.Variable], _ = w.stack.Pop()
 		return false
 
+	case *AssignNode:
+		if _, ok := w.ctx.Vars[s.Variable]; !ok {
+			err := errors.New("assign to undeclared variable")
+			w.CreatePullError(err, s.Line)
+		}
+
+		s.Expression.Walk(w)
+		result, _ := w.stack.Pop()
+
+		switch w.ctx.Vars[s.Variable].(type) {
+		case *IntNumber:
+			switch result.(type) {
+			case *IntNumber:
+				w.ctx.Vars[s.Variable] = result
+			case *FloatNumber:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *Boolean:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *String:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			}
+		case *FloatNumber:
+			switch result.(type) {
+			case *IntNumber:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *FloatNumber:
+				w.ctx.Vars[s.Variable] = result
+			case *Boolean:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *String:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			}
+		case *Boolean:
+			switch result.(type) {
+			case *IntNumber:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *FloatNumber:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *Boolean:
+				w.ctx.Vars[s.Variable] = result
+			case *String:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			}
+		case *String:
+			switch result.(type) {
+			case *IntNumber:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *FloatNumber:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *Boolean:
+				err := errors.New("invalid new type for assign to variable")
+				w.CreatePullError(err, s.Line)
+			case *String:
+				w.ctx.Vars[s.Variable] = result
+			}
+		}
+		return false
+
 	case *UnaryNode:
 		s.Walk(w)
 		op1, ok := w.stack.Pop()
@@ -899,6 +968,56 @@ func (w Executor) EnterNode(n Node) bool {
 		}
 
 		delete(w.ctx.Vars, s.iterVar)
+
+		return false
+
+	case *Break:
+		w.stack.Push(s)
+		return false
+
+	case *Continue:
+		w.stack.Push(s)
+		return false
+
+	case *While:
+		s.condition.Walk(w)
+		condition, ok := w.stack.Pop()
+
+		if condition == nil || !ok {
+			err := errors.New("condition expected")
+			w.CreatePullError(err, s.Line)
+			return false
+		}
+
+		switch result := condition.(type) {
+		case *Boolean:
+			conditionResult := result.value
+		Loop:
+			for conditionResult {
+				s.condition.Walk(w)
+				condition, _ := w.stack.Pop()
+
+				switch cnd := condition.(type) {
+				case *Boolean:
+					conditionResult = cnd.value
+				}
+
+				s.stmt.Walk(w)
+				res, _ := w.stack.Pop()
+
+				switch res.(type) {
+				case *Break:
+					break Loop
+				case *Continue:
+					continue Loop
+				}
+
+			}
+			return false
+		}
+
+		err := errors.New("invalid condition")
+		w.CreatePullError(err, s.Line)
 
 		return false
 	}
