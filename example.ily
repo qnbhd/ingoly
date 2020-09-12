@@ -2,7 +2,6 @@
 
 var x := 6
 var y := true
+var tt := type(x)
 
-if (x <= 6 && x < 10) && y != true {
-    print(x)
-}
+print(tt)

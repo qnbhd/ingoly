@@ -83,6 +83,12 @@ func (w Printer) EnterNode(n Node) bool {
 		s.node.Walk(w)
 		return false
 
+	case *TypeNode:
+		color.Magenta("!--> Type Operator (Keyword) " + "Line " + strconv.Itoa(s.Line))
+		w.IndentLevel++
+		s.node.Walk(w)
+		return false
+
 	case *IfNode:
 		color.Green("!--> If Else Block " + "Line " + strconv.Itoa(s.Line))
 		s.node.Walk(w)

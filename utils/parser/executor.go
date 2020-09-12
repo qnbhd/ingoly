@@ -709,6 +709,31 @@ func (w Executor) EnterNode(n Node) bool {
 
 		return false
 
+	case *TypeNode:
+		s.node.Walk(w)
+
+		op, ok := w.stack.Pop()
+
+		if !ok {
+			err := errors.New("using var before initialization")
+			w.CreatePullError(err, s.Line)
+		}
+
+		var result string
+		switch op.(type) {
+		case *IntNumber:
+			result = "int"
+		case *FloatNumber:
+			result = "float"
+		case *Boolean:
+			result = "boolean"
+		case *String:
+			result = "string"
+		}
+
+		w.stack.Push(&String{result, s.Line})
+		return false
+
 	case *IfNode:
 
 		s.node.Walk(w)

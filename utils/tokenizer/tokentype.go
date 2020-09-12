@@ -56,6 +56,7 @@ const (
 	IN
 	TRUE
 	FALSE
+	TYPE
 )
 
 func (tt TokenType) String() string {
@@ -66,5 +67,5 @@ func (tt TokenType) String() string {
 		"LESSEQUAL", "GREATEREQUAL", "TILDE", "CIRCUMFLEX", "DOUBLESTAR",
 		"PLUSEQUAL", "MINEQUAL", "STAREQUAL", "SLASHEQUAL", "PERCENTEQUAL",
 		"AMPEREQUAL", "VBAREQUAL", "COLONEQUAL", "CIRCUMFLEXEQUAL", "PRINT", "IF", "ELSE", "FOR",
-		"VAR", "RANGE", "IN", "TRUE", "FALSE"}[tt]
+		"VAR", "RANGE", "IN", "TRUE", "FALSE", "TYPE"}[tt]
 }

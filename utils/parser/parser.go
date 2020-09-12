@@ -49,12 +49,8 @@ func (ps *Parser) StatementOrBlock() Node {
 }
 
 func (ps *Parser) Node() Node {
-	line := ps.get(0).Line
 
-	if ps.match(tokenizer.PRINT) {
-		res := &PrintNode{node: ps.Expression(), Line: line}
-		return res
-	} else if ps.match(tokenizer.IF) {
+	if ps.match(tokenizer.IF) {
 		return ps.IfElseBlock()
 	} else if ps.match(tokenizer.FOR) {
 		return ps.ForBlock()
@@ -76,7 +72,7 @@ func (ps *Parser) AssignNode() Node {
 		}
 	}
 
-	panic("Eq err")
+	return ps.Expression()
 }
 
 func (ps *Parser) IfElseBlock() Node {
@@ -138,6 +134,20 @@ func (ps *Parser) ForBlock() Node {
 }
 
 func (ps *Parser) Expression() Node {
+	return ps.Keyword()
+}
+
+func (ps *Parser) Keyword() Node {
+	line := ps.get(0).Line
+
+	if ps.match(tokenizer.PRINT) {
+		res := &PrintNode{node: ps.Expression(), Line: line}
+		return res
+	} else if ps.match(tokenizer.TYPE) {
+		res := &TypeNode{node: ps.Expression(), Line: line}
+		return res
+	}
+
 	return ps.LogicalOr()
 }
 

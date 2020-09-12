@@ -78,6 +78,7 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["in"] = IN
 	ops.Operators["true"] = TRUE
 	ops.Operators["false"] = FALSE
+	ops.Operators["type"] = TYPE
 
 	return &ops
 }

@@ -222,3 +222,18 @@ func (fn *ForNode) Walk(v Visitor) {
 
 	v.LeaveNode(fn)
 }
+
+type TypeNode struct {
+	node Node
+	Line int
+}
+
+func (tn *TypeNode) Walk(v Visitor) {
+	if !v.EnterNode(tn) {
+		return
+	}
+
+	tn.node.Walk(v)
+
+	v.LeaveNode(tn)
+}
