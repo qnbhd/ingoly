@@ -1,8 +1,4 @@
 var z := "string"
-println(z)
-println(type(type(type(type(z)))))
-if z == type(z)
-    println("HW")
-for i in [0; 10) {
-    println("Это строка с номером " + string(i))
-}
+var formatted := string(1) + " 1 " + string(7.1) + " " + string(type("string")) + " **" * 5
+
+print(formatted)

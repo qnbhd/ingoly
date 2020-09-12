@@ -95,6 +95,17 @@ func (ps *Parser) AssignNode() Node {
 	return ps.Expression()
 }
 
+func (ps *Parser) Function() Node {
+	targetFuncName := ps.get(0).Lexeme
+	ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.LPAR)
+
+	res := &KeywordOperatorNode{ps.Expression(), targetFuncName, ps.get(0).Line}
+
+	ps.consume(tokenizer.RPAR)
+	return res
+}
+
 func (ps *Parser) IfElseBlock() Node {
 	line := ps.get(0).Line
 
@@ -309,11 +320,10 @@ func (ps *Parser) PRIMARY() Node {
 	if ps.match(tokenizer.FALSE) {
 		return &Boolean{value: false}
 	}
-	targetFuncName := ps.get(0).Lexeme
-	if ps.get(0).Type != tokenizer.STRING && contains(__reservedKeywords, targetFuncName) {
-		ps.consume(tokenizer.NAME)
-		res := &KeywordOperatorNode{ps.Expression(), targetFuncName, line}
-		return res
+	if ps.get(0).Type == tokenizer.NAME &&
+		ps.get(1).Type == tokenizer.LPAR &&
+		contains(__reservedKeywords, current.Lexeme) {
+		return ps.Function()
 	}
 	if ps.match(tokenizer.NAME) {
 		return &UsingVariableNode{name: current.Lexeme, Line: line}
