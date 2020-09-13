@@ -772,44 +772,41 @@ func (w Executor) EnterNode(n Node) bool {
 
 		return false
 
-	case *KeywordOperatorNode:
-		s.node.Walk(w)
+	case *FunctionDeclareNode:
+		w.ctx.Functions["sin"] = __InBoxSin
+		w.ctx.Functions["print"] = __InBoxPrint
+		w.ctx.Functions[s.name] = func(w Executor, curNode Node, argCount, line int) {
 
-		op, ok := w.stack.Pop()
+			//ctxVariables := map[string]Node{}
 
-		if op == nil || !ok {
-			err := errors.New("using var before initialization")
+			reverseAny(s.argNames)
+
+			for _, arg := range s.argNames {
+				_receivedArg, _ := w.stack.Pop()
+				w.ctx.Vars[arg] = _receivedArg
+			}
+
+			s.body.Walk(w)
+
+		}
+
+		return false
+
+	case *FunctionalNode:
+
+		for _, arg := range s.arguments {
+			arg.Walk(w)
+		}
+
+		functor, ok := w.ctx.Functions[s.operator]
+
+		if !ok {
+			err := errors.New("undeclared function")
 			w.CreatePullError(err, s.Line)
 			return false
 		}
 
-		switch s.operator {
-		case "print":
-			__InBoxPrint(w, s, op, s.Line)
-		case "println":
-			__InBoxPrintln(w, s, op, s.Line)
-		case "type":
-			__InBoxType(w, s, op, s.Line)
-		case "sin":
-			fallthrough
-		case "cos":
-			fallthrough
-		case "tan":
-			fallthrough
-		case "sqrt":
-			__InBoxMathFunc(w, s, op, s.Line, s.operator)
-		case "int":
-			fallthrough
-		case "float":
-			fallthrough
-		case "boolean":
-			fallthrough
-		case "string":
-			__TypeCastingFunc(w, s, op, s.Line, s.operator)
-		default:
-			err := errors.New("unknown function operator")
-			w.CreatePullError(err, s.Line)
-		}
+		functor(w, s, 1, s.Line)
 
 		return false
 

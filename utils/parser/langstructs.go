@@ -14,6 +14,8 @@ func (ps *Parser) Node() Node {
 		return &Break{Line: ps.get(0).Line}
 	} else if ps.match(tokenizer.CONTINUE) {
 		return &Continue{Line: ps.get(0).Line}
+	} else if ps.match(tokenizer.DECLARE) {
+		return ps.FuncDeclaration()
 	}
 	return ps.AssignNode()
 }
@@ -48,9 +50,15 @@ func (ps *Parser) Function() Node {
 	ps.consume(tokenizer.NAME)
 	ps.consume(tokenizer.LPAR)
 
-	res := &KeywordOperatorNode{ps.Expression(), targetFuncName, ps.get(0).Line}
+	var args []Node
+	var res Node
 
-	ps.consume(tokenizer.RPAR)
+	for !ps.match(tokenizer.RPAR) {
+		args = append(args, ps.Expression())
+		res = &FunctionalNode{args, targetFuncName, ps.get(0).Line}
+		ps.match(tokenizer.COMMA)
+	}
+
 	return res
 }
 
@@ -116,4 +124,22 @@ func (ps *Parser) While() Node {
 	condition := ps.Expression()
 	stmt := ps.StatementOrBlock()
 	return &While{condition, stmt, ps.get(0).Line}
+}
+
+func (ps *Parser) FuncDeclaration() Node {
+	name := ps.get(0).Lexeme
+	line := ps.get(0).Line
+	ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.LPAR)
+
+	var argNames []string
+	for !ps.match(tokenizer.RPAR) {
+		res, _ := ps.consume(tokenizer.NAME)
+		ps.match(tokenizer.COMMA)
+		argNames = append(argNames, res.Lexeme)
+	}
+
+	body := ps.StatementOrBlock()
+
+	return &FunctionDeclareNode{name, argNames, body, line}
 }

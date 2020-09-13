@@ -1,8 +1,5 @@
-var z := 1
-
-for i in [0; 10) {
-    if i == 6 {
-        break
-    }
-    println(i)
+declare doublePrint(x, y) {
+    print(x, y)
 }
+
+doublePrint(10, 25)

@@ -33,8 +33,8 @@ func (ps *Parser) atomic() Node {
 		return &Boolean{value: false}
 	}
 	if ps.get(0).Type == tokenizer.NAME &&
-		ps.get(1).Type == tokenizer.LPAR &&
-		contains(__reservedKeywords, current.Lexeme) {
+		ps.get(1).Type == tokenizer.LPAR {
+		//contains(__reservedKeywords, current.Lexeme) {
 		return ps.Function()
 	}
 	if ps.match(tokenizer.NAME) {

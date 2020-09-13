@@ -80,6 +80,8 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["break"] = BREAK
 	ops.Operators["continue"] = CONTINUE
 	ops.Operators["while"] = WHILE
+	ops.Operators["declare"] = DECLARE
+	ops.Operators["return"] = RETURN
 
 	return &ops
 }

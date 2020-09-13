@@ -178,18 +178,37 @@ func (as *AssignNode) Walk(v Visitor) {
 
 /* Print Node */
 
-type KeywordOperatorNode struct {
-	node     Node
-	operator string
-	Line     int
+type FunctionalNode struct {
+	arguments []Node
+	operator  string
+	Line      int
 }
 
-func (ps *KeywordOperatorNode) Walk(v Visitor) {
+func (ps *FunctionalNode) Walk(v Visitor) {
 	if !v.EnterNode(ps) {
 		return
 	}
 
-	ps.node.Walk(v)
+	for _, arg := range ps.arguments {
+		arg.Walk(v)
+	}
+
+	v.LeaveNode(ps)
+}
+
+type FunctionDeclareNode struct {
+	name     string
+	argNames []string
+	body     Node
+	Line     int
+}
+
+func (ps *FunctionDeclareNode) Walk(v Visitor) {
+	if !v.EnterNode(ps) {
+		return
+	}
+
+	ps.body.Walk(v)
 
 	v.LeaveNode(ps)
 }

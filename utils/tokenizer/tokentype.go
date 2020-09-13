@@ -58,6 +58,8 @@ const (
 	FALSE
 	BREAK
 	CONTINUE
+	DECLARE
+	RETURN
 )
 
 func (tt TokenType) String() string {
@@ -68,5 +70,5 @@ func (tt TokenType) String() string {
 		"LESSEQUAL", "GREATEREQUAL", "TILDE", "CIRCUMFLEX", "DOUBLESTAR",
 		"PLUSEQUAL", "MINEQUAL", "STAREQUAL", "SLASHEQUAL", "PERCENTEQUAL",
 		"AMPEREQUAL", "VBAREQUAL", "COLONEQUAL", "CIRCUMFLEXEQUAL", "IF", "ELSE", "FOR", "WHILE",
-		"VAR", "RANGE", "IN", "TRUE", "FALSE", "BREAK", "CONTINUE"}[tt]
+		"VAR", "RANGE", "IN", "TRUE", "FALSE", "BREAK", "CONTINUE", "DECLARE", "RETURN"}[tt]
 }

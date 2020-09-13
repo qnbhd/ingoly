@@ -84,10 +84,12 @@ func (w Printer) EnterNode(n Node) bool {
 		s.op2.Walk(w)
 		return false
 
-	case *KeywordOperatorNode:
+	case *FunctionalNode:
 		color.Magenta("!--> %s Operator (Keyword) "+"Line "+strconv.Itoa(s.Line), s.operator)
 		w.IndentLevel++
-		s.node.Walk(w)
+		for _, arg := range s.arguments {
+			arg.Walk(w)
+		}
 		return false
 
 	case *IfNode:
@@ -126,11 +128,20 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *Break:
-		color.HiCyan("!--> Break (Statement)" + "Line " + strconv.Itoa(s.Line+1))
+		color.HiCyan("!--> Break (Statement)" + " Line " + strconv.Itoa(s.Line+1))
 		return false
 
 	case *Continue:
-		color.HiCyan("!--> Continue (Statement)" + "Line " + strconv.Itoa(s.Line+1))
+		color.HiCyan("!--> Continue (Statement)" + " Line " + strconv.Itoa(s.Line+1))
+		return false
+
+	case *FunctionDeclareNode:
+		color.Green("!--> Declaration Function (Statement)" + "Line " + strconv.Itoa(s.Line))
+		color.HiGreen("!--> Arg Names: ")
+		for _, item := range s.argNames {
+			color.Blue("   +- %s", item)
+		}
+		s.body.Walk(w)
 		return false
 
 	case *While:
