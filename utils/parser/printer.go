@@ -22,6 +22,7 @@ func (w Printer) EnterNode(n Node) bool {
 
 	switch s := n.(type) {
 	case *BlockNode:
+		color.Green("!--> Block")
 		w.IndentLevel++
 		for _, node := range s.Nodes {
 			node.Walk(w)
@@ -134,8 +135,6 @@ func (w Printer) EnterNode(n Node) bool {
 
 	case *While:
 		color.Green("!--> While Block (Statement) Line: %d", s.Line)
-
-		w.IndentLevel++
 
 		color.Green("!--> Cycle condition " + "Line " + strconv.Itoa(s.Line+1))
 		s.condition.Walk(w)

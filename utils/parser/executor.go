@@ -880,17 +880,67 @@ func (w Executor) EnterNode(n Node) bool {
 				switch st := stepNode.(type) {
 				case *IntNumber:
 					step := st.value
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopIII:
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += step {
 						w.ctx.Vars[s.iterVar] = &IntNumber{i, s.Line}
 						s.stmt.Walk(w)
+						res, _ := w.stack.Pop()
+
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopIII
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopIII
+						}
 
 					}
 				case *FloatNumber:
 					step := st.value
 					stepCasted := int(step)
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopIIF:
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
 						w.ctx.Vars[s.iterVar] = &IntNumber{i, s.Line}
 						s.stmt.Walk(w)
+						res, _ := w.stack.Pop()
+
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopIIF
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopIIF
+						}
 					}
 				default:
 					err := errors.New("invalid loop step")
@@ -904,15 +954,67 @@ func (w Executor) EnterNode(n Node) bool {
 					step := st.value
 					startCasted := float64(start)
 					stepCasted := float64(step)
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopIFI:
 					for i := startCasted; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
 						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
+
+						res, _ := w.stack.Pop()
+
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopIFI
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopIFI
+						}
 					}
 				case *FloatNumber:
 					step := st.value
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopIFF:
 					for i := float64(start); BoolTernary(s.strict, i <= stop, i < stop); i += step {
 						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
+
+						res, _ := w.stack.Pop()
+
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopIFF
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopIFF
+						}
 					}
 				default:
 					err := errors.New("invalid loop step")
@@ -933,16 +1035,67 @@ func (w Executor) EnterNode(n Node) bool {
 					step := st.value
 					stopCasted := float64(stop)
 					stepCasted := float64(step)
+					// labeling
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopFII:
 					for i := start; BoolTernary(s.strict, i <= stopCasted, i < stopCasted); i += stepCasted {
 						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
+						res, _ := w.stack.Pop()
+
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopFII
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopFII
+						}
 					}
 				case *FloatNumber:
 					step := st.value
 					stopCasted := float64(stop)
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopFIF:
 					for i := start; BoolTernary(s.strict, i <= stopCasted, i < stopCasted); i += step {
 						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
+						res, _ := w.stack.Pop()
+
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopFIF
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopFIF
+						}
 					}
 				default:
 					err := errors.New("invalid loop step")
@@ -955,15 +1108,65 @@ func (w Executor) EnterNode(n Node) bool {
 				case *IntNumber:
 					step := st.value
 					stepCasted := float64(step)
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopFFI:
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
 						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
+						res, _ := w.stack.Pop()
+
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopFFI
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopFFI
+						}
 					}
 				case *FloatNumber:
 					step := st.value
+					loopLabel := fmt.Sprintf("__label%d", rand.Int())
+					w.lastStructLabel = loopLabel
+				LoopFFF:
+
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += step {
 						w.ctx.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
+						res, _ := w.stack.Pop()
+						switch res.(type) {
+						case *Break:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							break LoopFFF
+						case *Continue:
+							for idx, interrupt := range w.interruptions {
+								if strings.Contains(interrupt, loopLabel) {
+									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									break
+								}
+							}
+							w.lastStructLabel = ""
+							continue LoopFFF
+						}
 					}
 				default:
 					err := errors.New("invalid loop step")

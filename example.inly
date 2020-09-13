@@ -1,10 +1,8 @@
 var z := 1
 
-while z < 10 {
-    if z == 6 {
-        z = z + 1
-        continue
+for i in [0; 10) {
+    if i == 6 {
+        break
     }
-    println(z)
-    z = z + 1
+    println(i)
 }
