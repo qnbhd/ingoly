@@ -2,8 +2,11 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"ingoly/utils/errpull"
 	"math"
+	"math/rand"
+	"strings"
 )
 
 func BoolTernary(statement bool, a, b bool) bool {
@@ -16,13 +19,19 @@ func BoolTernary(statement bool, a, b bool) bool {
 const EPS = 1e-13
 
 type Executor struct {
-	ctx        *BlockContext
-	stack      *Stack
-	ErrorsPull *errpull.ErrorsPull
+	ctx             *BlockContext
+	stack           *Stack
+	ErrorsPull      *errpull.ErrorsPull
+	lastStructLabel string
+	interruptions   []string
 }
 
 func NewExecutor() Executor {
-	return Executor{NewBlockContext(), NewStack(), errpull.NewErrorsPull()}
+	return Executor{NewBlockContext(),
+		NewStack(),
+		errpull.NewErrorsPull(),
+		"",
+		[]string{}}
 }
 
 func (w *Executor) CreatePullError(err error, line int) {
@@ -31,6 +40,10 @@ func (w *Executor) CreatePullError(err error, line int) {
 }
 
 func (w Executor) EnterNode(n Node) bool {
+
+	if len(w.interruptions) != 0 {
+		return false
+	}
 
 	switch s := n.(type) {
 	case *BinaryNode:
@@ -972,10 +985,12 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *Break:
+		w.interruptions = append(w.interruptions, w.lastStructLabel+"_break")
 		w.stack.Push(s)
 		return false
 
 	case *Continue:
+		w.interruptions = append(w.interruptions, w.lastStructLabel+"_continue")
 		w.stack.Push(s)
 		return false
 
@@ -992,8 +1007,34 @@ func (w Executor) EnterNode(n Node) bool {
 		switch result := condition.(type) {
 		case *Boolean:
 			conditionResult := result.value
+			loopLabel := fmt.Sprintf("__label%d", rand.Int())
+			w.lastStructLabel = loopLabel
 		Loop:
 			for conditionResult {
+				s.stmt.Walk(w)
+				res, _ := w.stack.Pop()
+
+				switch res.(type) {
+				case *Break:
+					for idx, interrupt := range w.interruptions {
+						if strings.Contains(interrupt, loopLabel) {
+							w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+							break
+						}
+					}
+					w.lastStructLabel = ""
+					break Loop
+				case *Continue:
+					for idx, interrupt := range w.interruptions {
+						if strings.Contains(interrupt, loopLabel) {
+							w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+							break
+						}
+					}
+					w.lastStructLabel = ""
+					continue Loop
+				}
+
 				s.condition.Walk(w)
 				condition, _ := w.stack.Pop()
 
@@ -1001,17 +1042,6 @@ func (w Executor) EnterNode(n Node) bool {
 				case *Boolean:
 					conditionResult = cnd.value
 				}
-
-				s.stmt.Walk(w)
-				res, _ := w.stack.Pop()
-
-				switch res.(type) {
-				case *Break:
-					break Loop
-				case *Continue:
-					continue Loop
-				}
-
 			}
 			return false
 		}

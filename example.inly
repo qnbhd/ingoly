@@ -1,3 +1,10 @@
 var z := 1
 
-z = "Hello"
+while z < 10 {
+    if z == 6 {
+        z = z + 1
+        continue
+    }
+    println(z)
+    z = z + 1
+}
