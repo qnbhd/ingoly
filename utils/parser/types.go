@@ -47,3 +47,14 @@ func (sn *String) Walk(v Visitor) {
 	}
 	v.LeaveNode(sn)
 }
+
+type Nil struct {
+	Line int
+}
+
+func (sn *Nil) Walk(v Visitor) {
+	if !v.EnterNode(sn) {
+		return
+	}
+	v.LeaveNode(sn)
+}

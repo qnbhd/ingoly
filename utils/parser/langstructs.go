@@ -16,6 +16,8 @@ func (ps *Parser) Node() Node {
 		return &Continue{Line: ps.get(0).Line}
 	} else if ps.match(tokenizer.DECLARE) {
 		return ps.FuncDeclaration()
+	} else if ps.match(tokenizer.RETURN) {
+		return ps.ReturnStmt()
 	}
 	return ps.AssignNode()
 }
@@ -142,4 +144,11 @@ func (ps *Parser) FuncDeclaration() Node {
 	body := ps.StatementOrBlock()
 
 	return &FunctionDeclareNode{name, argNames, body, line}
+}
+
+func (ps *Parser) ReturnStmt() Node {
+
+	returnValue := ps.Expression()
+
+	return &Return{returnValue, ps.get(0).Line}
 }

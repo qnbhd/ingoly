@@ -1,13 +1,5 @@
 package parser
 
-import (
-	"strconv"
-)
-
-func FloatToString(inputNum float64) string {
-	return strconv.FormatFloat(inputNum, 'f', 3, 64)
-}
-
 /* Base Node */
 
 type Node interface {
@@ -298,4 +290,19 @@ func (b *Continue) Walk(v Visitor) {
 	}
 
 	v.LeaveNode(b)
+}
+
+type Return struct {
+	value Node
+	Line  int
+}
+
+func (r *Return) Walk(v Visitor) {
+	if !v.EnterNode(r) {
+		return
+	}
+
+	r.value.Walk(v)
+
+	v.LeaveNode(r)
 }

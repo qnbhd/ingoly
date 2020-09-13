@@ -7,10 +7,6 @@ import (
 	"reflect"
 )
 
-func __DummyF64(arg float64) float64 {
-	return arg
-}
-
 func reverseAny(s interface{}) {
 	n := reflect.ValueOf(s).Len()
 	swap := reflect.Swapper(s)
@@ -43,7 +39,7 @@ func __InBoxPrint(w Executor, curNode Node, argCount, line int) {
 	}
 }
 
-func __InBoxPrintln(w Executor, curNode Node, line int) {
+func __InBoxPrintln(w Executor, curNode Node, argCount, line int) {
 
 	var args []Node
 	for !w.stack.IsEmpty() {
@@ -66,7 +62,7 @@ func __InBoxPrintln(w Executor, curNode Node, line int) {
 		}
 	}
 
-	fmt.Println("")
+	fmt.Println()
 }
 
 func __InBoxType(w Executor, curNode Node, line int) {

@@ -1,5 +1,19 @@
-declare doublePrint(x, y) {
-    print(x, y)
+declare add(x, y) {
+    return x + y
 }
 
-doublePrint(10, 25)
+declare mult(x, y) {
+    return x * y
+}
+
+declare pow(a, n) {
+    var result := 1
+    for it in [0; n) {
+        result = result * a
+    }
+    return result
+}
+
+var u := pow(10, 5)
+
+print(u)

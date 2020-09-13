@@ -154,6 +154,13 @@ func (w Printer) EnterNode(n Node) bool {
 		s.stmt.Walk(w)
 
 		return false
+
+	case *Return:
+		color.Magenta("!--> Return (Statement) Line: %d", s.Line)
+
+		w.IndentLevel++
+		s.value.Walk(w)
+		w.IndentLevel--
 	}
 
 	return true

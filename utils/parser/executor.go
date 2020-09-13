@@ -27,7 +27,16 @@ type Executor struct {
 }
 
 func NewExecutor() Executor {
-	return Executor{NewBlockContext(),
+	ctx := NewBlockContext()
+	ctx.Functions["sin"] = __InBoxSin
+	ctx.Functions["print"] = __InBoxPrint
+	ctx.Functions["println"] = __InBoxPrintln
+	ctx.Functions["int"] = __TypeCastingInt
+	ctx.Functions["float"] = __TypeCastingFloat
+	ctx.Functions["boolean"] = __TypeCastingBoolean
+	ctx.Functions["string"] = __TypeCastingString
+
+	return Executor{ctx,
 		NewStack(),
 		errpull.NewErrorsPull(),
 		"",
@@ -773,8 +782,7 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *FunctionDeclareNode:
-		w.ctx.Functions["sin"] = __InBoxSin
-		w.ctx.Functions["print"] = __InBoxPrint
+
 		w.ctx.Functions[s.name] = func(w Executor, curNode Node, argCount, line int) {
 
 			//ctxVariables := map[string]Node{}
@@ -787,6 +795,13 @@ func (w Executor) EnterNode(n Node) bool {
 			}
 
 			s.body.Walk(w)
+			returnValue, ok := w.stack.Pop()
+
+			if ok {
+				returnValue.Walk(w)
+				result, _ := w.stack.Pop()
+				w.stack.Push(result)
+			}
 
 		}
 
@@ -1250,9 +1265,14 @@ func (w Executor) EnterNode(n Node) bool {
 		w.CreatePullError(err, s.Line)
 
 		return false
+
+	case *Return:
+		w.stack.Push(s.value)
+		return false
 	}
 
 	return true
+
 }
 
 func (w Executor) LeaveNode(n Node) {
