@@ -65,7 +65,7 @@ multi-line comment
 
 Result:
 
-```
+```go
 true 
 Cycle 1 0 
 Cycle 1 1 
@@ -90,7 +90,7 @@ Hello World
 
 Ast-Tree print:
 
-```
+```go
 !--> Declaration Variable Parse (Parse) var 'x' Line 3
    !--> Integer (Number) Value: 6, Line: 3
 !--> Declaration Variable Parse (Parse) var 'y' Line 4
