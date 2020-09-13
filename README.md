@@ -6,7 +6,7 @@
 
 ### Features
 
-- Support nums, vars, strings, logical condition, if-else, print, comments now
+- Support nums, vars, strings, logical condition, if-else, for-while, functions, declaring functions
 
 ## Run
 
