@@ -35,7 +35,10 @@ func __InBoxPrint(w Executor, curNode Node, argCount, line int) {
 			fmt.Print(exp.value, " ")
 		case *String:
 			fmt.Print(exp.value, " ")
+		case *Nil:
+			fmt.Print("nil", " ")
 		}
+
 	}
 }
 
@@ -59,6 +62,8 @@ func __InBoxPrintln(w Executor, curNode Node, argCount, line int) {
 			fmt.Print(exp.value, " ")
 		case *String:
 			fmt.Print(exp.value, " ")
+		case *Nil:
+			fmt.Print("nil", " ")
 		}
 	}
 

@@ -18,6 +18,8 @@ func (ps *Parser) Node() Node {
 		return ps.FuncDeclaration()
 	} else if ps.match(tokenizer.RETURN) {
 		return ps.ReturnStmt()
+	} else if ps.match(tokenizer.NIL) {
+		return &Nil{ps.get(0).Line}
 	}
 	return ps.AssignNode()
 }

@@ -82,6 +82,7 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["while"] = WHILE
 	ops.Operators["declare"] = DECLARE
 	ops.Operators["return"] = RETURN
+	ops.Operators["nil"] = NIL
 
 	return &ops
 }

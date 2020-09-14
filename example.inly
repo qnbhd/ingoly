@@ -1,19 +1,8 @@
-declare add(x, y) {
-    return x + y
+declare prettyPrint(x) {
+    println(x)
+    return 1
 }
 
-declare mult(x, y) {
-    return x * y
-}
+var x := prettyPrint(10)
 
-declare pow(a, n) {
-    var result := 1
-    for it in [0; n) {
-        result = result * a
-    }
-    return result
-}
-
-var u := pow(10, 5)
-
-print(u)
+println(x)

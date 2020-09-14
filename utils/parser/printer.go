@@ -14,17 +14,22 @@ func NewPrinter() Printer {
 	return Printer{IndentLevel: 0}
 }
 
-func (w Printer) EnterNode(n Node) bool {
-
-	for i := 0; i < w.IndentLevel; i++ {
+func (w Printer) PrintIndent(relAdd int) {
+	for i := 0; i < w.IndentLevel+relAdd; i++ {
 		fmt.Print("   ")
 	}
+}
+
+func (w Printer) EnterNode(n Node) bool {
+
+	w.PrintIndent(0)
 
 	switch s := n.(type) {
 	case *BlockNode:
 		color.Green("!--> Block")
 		w.IndentLevel++
 		for _, node := range s.Nodes {
+
 			node.Walk(w)
 		}
 		return false
@@ -94,13 +99,25 @@ func (w Printer) EnterNode(n Node) bool {
 
 	case *IfNode:
 		color.Green("!--> If Else Block " + "Line " + strconv.Itoa(s.Line))
+
+		w.IndentLevel += 2
+		w.PrintIndent(-1)
+		color.Green("!--> If Condition " + "Line " + strconv.Itoa(s.Line))
 		s.node.Walk(w)
+		w.IndentLevel -= 2
+
+		w.IndentLevel += 2
+		w.PrintIndent(-1)
 		color.Green("!--> If Case " + "Line " + strconv.Itoa(s.Line+1))
 		s.ifStmt.Walk(w)
+		w.IndentLevel -= 2
 
 		if s.elseStmt != nil {
+			w.IndentLevel += 2
+			w.PrintIndent(-1)
 			color.Green("!--> Else Case ")
 			s.elseStmt.Walk(w)
+			w.IndentLevel -= 2
 		}
 
 		w.IndentLevel--
@@ -109,21 +126,29 @@ func (w Printer) EnterNode(n Node) bool {
 	case *ForNode:
 		color.Green("!--> For Block [IterVar: '%s'] Line: %d", s.iterVar, s.Line)
 
-		w.IndentLevel++
-
+		w.IndentLevel += 2
+		w.PrintIndent(-1)
 		color.Green("!--> Start Section " + "Line " + strconv.Itoa(s.Line+1))
 		s.start.Walk(w)
+		w.IndentLevel -= 2
 
+		w.IndentLevel += 2
+		w.PrintIndent(-1)
 		color.Green("!--> Stop Section " + "Line " + strconv.Itoa(s.Line+1))
 		s.stop.Walk(w)
+		w.IndentLevel -= 2
 
+		w.IndentLevel += 2
+		w.PrintIndent(-1)
 		color.Green("!--> Step Section " + "Line " + strconv.Itoa(s.Line+1))
 		s.step.Walk(w)
+		w.IndentLevel -= 2
 
-		w.IndentLevel--
-
+		w.IndentLevel += 2
+		w.PrintIndent(-1)
 		color.Green("!--> Iter Code " + "Line " + strconv.Itoa(s.Line+1))
 		s.stmt.Walk(w)
+		w.IndentLevel -= 2
 
 		return false
 
@@ -136,12 +161,14 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *FunctionDeclareNode:
-		color.Green("!--> Declaration Function (Statement)" + "Line " + strconv.Itoa(s.Line))
-		color.HiGreen("!--> Arg Names: ")
+		color.Green("!--> Declaration Function ['%s'] (Statement) Line: %d ", s.name, s.Line)
+		color.HiGreen("   !--> Arg Names: ")
 		for _, item := range s.argNames {
-			color.Blue("   +- %s", item)
+			color.Blue("      +- %s", item)
 		}
+		w.IndentLevel++
 		s.body.Walk(w)
+		w.IndentLevel--
 		return false
 
 	case *While:
@@ -161,6 +188,7 @@ func (w Printer) EnterNode(n Node) bool {
 		w.IndentLevel++
 		s.value.Walk(w)
 		w.IndentLevel--
+		return false
 	}
 
 	return true

@@ -16,6 +16,19 @@ func BoolTernary(statement bool, a, b bool) bool {
 	return b
 }
 
+func (w *Executor) ClearStackLastNil() {
+	__last, ok := w.stack.Pop()
+
+	if ok {
+		switch __last.(type) {
+		case *Nil:
+			return
+		default:
+			w.stack.Push(__last)
+		}
+	}
+}
+
 const EPS = 1e-13
 
 type Executor struct {
@@ -801,6 +814,8 @@ func (w Executor) EnterNode(n Node) bool {
 				returnValue.Walk(w)
 				result, _ := w.stack.Pop()
 				w.stack.Push(result)
+			} else {
+				w.stack.Push(&Nil{Line: line})
 			}
 
 		}
@@ -1269,7 +1284,25 @@ func (w Executor) EnterNode(n Node) bool {
 	case *Return:
 		w.stack.Push(s.value)
 		return false
+
+	case *Nil:
+		w.stack.Push(&Nil{s.Line})
 	}
+
+	// clearing nil
+
+	switch n.(type) {
+	case *DeclarationNode:
+	case *AssignNode:
+	case *FunctionalNode:
+	//case *ForNode:
+	//case *While:
+	//case *IfNode:
+	default:
+		return true
+	}
+
+	w.ClearStackLastNil()
 
 	return true
 
