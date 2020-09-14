@@ -20,73 +20,80 @@ func (w Printer) PrintIndent(relAdd int) {
 	}
 }
 
+func defaultInfoPrint(colorFunctor func(format string, a ...interface{}), line int, mainInformation ...string) {
+	formattedString := "!--> "
+	for _, item := range mainInformation {
+		formattedString += fmt.Sprintf("%s", item)
+	}
+	colorFunctor("%s |> Line %d", formattedString, line)
+}
+
 func (w Printer) EnterNode(n Node) bool {
 
 	w.PrintIndent(0)
 
 	switch s := n.(type) {
 	case *BlockNode:
-		color.Green("!--> Block")
+		defaultInfoPrint(color.Green, s.Line, "Block")
 		w.IndentLevel++
 		for _, node := range s.Nodes {
-
 			node.Walk(w)
 		}
 		return false
 	case *BinaryNode:
-		color.Green("!--> Binary Operation (Operation) '" + s.operation + "' " + "Line " + strconv.Itoa(s.Line))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Binary Operation (Operation) '%s'", s.operation))
 		w.IndentLevel++
 		s.op1.Walk(w)
 		s.op2.Walk(w)
 		return false
 
 	case *DeclarationNode:
-		color.Green("!--> Declaration Variable Parse (Parse) var '" + s.Variable + "' " + "Line " + strconv.Itoa(s.Line))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Declaration Variable (Statement) ['%s']", s.Variable))
 		w.IndentLevel++
 		s.Expression.Walk(w)
 		return false
 
 	case *AssignNode:
-		color.Green("!--> Assign Variable Parse (Parse) var '" + s.Variable + "' " + "Line " + strconv.Itoa(s.Line))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Assign Variable (Statement) ['%s']", s.Variable))
 		w.IndentLevel++
 		s.Expression.Walk(w)
 		return false
 
 	case *UnaryNode:
-		color.Green("!--> Unary Operation (Operation) '" + s.operation + "' " + "Line " + strconv.Itoa(s.Line))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Unary Operation (Operation) '%s'", s.operation))
 		w.IndentLevel++
 		s.op1.Walk(w)
 		return false
 
 	case *ScopeVar:
-		color.Blue("!--> Using Variable (Value) '" + s.name + "' " + "Line " + strconv.Itoa(s.Line))
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Using Variable (Value) ['%s']", s.name))
 		return false
 
 	case *IntNumber:
-		color.Blue("!--> Integer (Number) Value: %d, Line: %d", s.value, s.Line)
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Integer Number (Number) Value: '%d'", s.value))
 		return false
 
 	case *FloatNumber:
-		color.Blue("!--> Float (Number) Value: %3.3f, Line: %d", s.value, s.Line)
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Float Number (Number) Value: '%3.3f'", s.value))
 		return false
 
 	case *String:
-		color.Blue("!--> String (String) Value: %s, Line: %d", s.value, s.Line)
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("String (String) Value: '%s'", s.value))
 		return false
 
 	case *Boolean:
-		color.Blue("!--> Boolean (Boolean) Value: %t, Line: %d", s.value, s.Line)
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Boolean (Boolean) Value: '%t'", s.value))
 		return false
 
 	case *ConditionalNode:
-		color.Green("!--> Logical Operation (Operation) '" + s.operation + "' " + "Line " + strconv.Itoa(s.Line))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Logical Operation (Operation) '%s''", s.operation))
 		w.IndentLevel++
 		s.op1.Walk(w)
 		s.op2.Walk(w)
 		return false
 
 	case *FunctionalNode:
-		color.Magenta("!--> %s Operator (Keyword) "+"Line "+strconv.Itoa(s.Line), s.operator)
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Operator '%s' (Operator)", s.operator))
 		w.IndentLevel++
 		for _, arg := range s.arguments {
 			arg.Walk(w)
@@ -94,24 +101,23 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *IfNode:
-		color.Green("!--> If Else Block " + "Line " + strconv.Itoa(s.Line))
-
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("If-Else Block (Block)"))
 		w.IndentLevel += 2
 		w.PrintIndent(-1)
-		color.Green("!--> If Condition " + "Line " + strconv.Itoa(s.Line))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("If Condition (Condition)"))
 		s.node.Walk(w)
 		w.IndentLevel -= 2
 
 		w.IndentLevel += 2
 		w.PrintIndent(-1)
-		color.Green("!--> If Case " + "Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.Green, s.Line+1, fmt.Sprintf("If Case (Case)"))
 		s.ifStmt.Walk(w)
 		w.IndentLevel -= 2
 
 		if s.elseStmt != nil {
 			w.IndentLevel += 2
 			w.PrintIndent(-1)
-			color.Green("!--> Else Case ")
+			defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Else Case (Case)"))
 			s.elseStmt.Walk(w)
 			w.IndentLevel -= 2
 		}
@@ -120,23 +126,23 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *ForNode:
-		color.Green("!--> For Block [IterVar: '%s'] Line: %d", s.iterVar, s.Line)
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("For Block [IterVar: '%s'] (Block)", s.iterVar))
 
 		w.IndentLevel += 2
 		w.PrintIndent(-1)
-		color.Green("!--> Start Section " + "Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.Green, s.Line+1, fmt.Sprintf("Start Section (Section)"))
 		s.start.Walk(w)
 		w.IndentLevel -= 2
 
 		w.IndentLevel += 2
 		w.PrintIndent(-1)
-		color.Green("!--> Stop Section " + "Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.Green, s.Line+1, fmt.Sprintf("Stop Section (Section)"))
 		s.stop.Walk(w)
 		w.IndentLevel -= 2
 
 		w.IndentLevel += 2
 		w.PrintIndent(-1)
-		color.Green("!--> Step Section " + "Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.Green, s.Line+1, fmt.Sprintf("Step Section (Section)"))
 		s.step.Walk(w)
 		w.IndentLevel -= 2
 
@@ -149,15 +155,15 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *Break:
-		color.HiCyan("!--> Break (Statement)" + " Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.HiCyan, s.Line, fmt.Sprintf("Break (Statement)"))
 		return false
 
 	case *Continue:
-		color.HiCyan("!--> Continue (Statement)" + " Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.HiCyan, s.Line, fmt.Sprintf("Continue (Statement)"))
 		return false
 
 	case *FunctionDeclareNode:
-		color.Green("!--> Declaration Function ['%s'] (Statement) Line: %d ", s.name, s.Line)
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Declaration Function ['%s'] (Statement)", s.name))
 
 		if len(s.argNames) != 0 {
 			color.HiGreen("   !--> Arg Names: ")
@@ -171,22 +177,26 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *While:
-		color.Green("!--> While Block (Statement) Line: %d", s.Line)
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("While-Block (Block)"))
 
-		color.Green("!--> Cycle condition " + "Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Cycle Condition (Condition)"))
 		s.condition.Walk(w)
 
-		color.Green("!--> Cycle Statement " + "Line " + strconv.Itoa(s.Line+1))
+		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Cycle Body (Block)"))
 		s.stmt.Walk(w)
 
 		return false
 
 	case *Return:
-		color.Magenta("!--> Return (Statement) Line: %d", s.Line)
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Return (Statement)"))
 
 		w.IndentLevel++
 		s.value.Walk(w)
 		w.IndentLevel--
+		return false
+
+	case *Nil:
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Nil Value"))
 		return false
 	}
 

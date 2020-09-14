@@ -24,6 +24,7 @@ func (bn *BaseNode) Walk(v Visitor) {
 
 type BlockNode struct {
 	Nodes []Node
+	Line  int
 }
 
 func (bn *BlockNode) Walk(v Visitor) {

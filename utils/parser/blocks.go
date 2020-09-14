@@ -4,10 +4,12 @@ import "ingoly/utils/tokenizer"
 
 func (ps *Parser) Block() Node {
 	block := BlockNode{}
+	block.Line = ps.get(0).Line
 	ps.consume(tokenizer.LBRACE)
 	for !ps.match(tokenizer.RBRACE) {
 		block.Nodes = append(block.Nodes, ps.Node())
 	}
+
 	return &block
 }
 
