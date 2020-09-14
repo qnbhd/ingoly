@@ -29,14 +29,22 @@ func (w *Executor) ClearStackLastNil() {
 	}
 }
 
+type InterruptionsPull struct {
+	interruptions []string
+}
+
+func NewInterruptionsPull() *InterruptionsPull {
+	return &InterruptionsPull{interruptions: []string{}}
+}
+
 const EPS = 1e-13
 
 type Executor struct {
-	ctx             *BlockContext
-	stack           *Stack
-	ErrorsPull      *errpull.ErrorsPull
-	lastStructLabel string
-	interruptions   []string
+	ctx               *BlockContext
+	stack             *Stack
+	ErrorsPull        *errpull.ErrorsPull
+	lastStructLabel   string
+	interruptionsPull *InterruptionsPull
 }
 
 func NewExecutor() Executor {
@@ -53,7 +61,7 @@ func NewExecutor() Executor {
 		NewStack(),
 		errpull.NewErrorsPull(),
 		"",
-		[]string{}}
+		NewInterruptionsPull()}
 }
 
 func (w *Executor) CreatePullError(err error, line int) {
@@ -63,7 +71,7 @@ func (w *Executor) CreatePullError(err error, line int) {
 
 func (w Executor) EnterNode(n Node) bool {
 
-	if len(w.interruptions) != 0 {
+	if len(w.interruptionsPull.interruptions) != 0 {
 		return false
 	}
 
@@ -807,8 +815,19 @@ func (w Executor) EnterNode(n Node) bool {
 				w.ctx.Vars[arg] = _receivedArg
 			}
 
+			functionLabel := fmt.Sprintf("__function%d", rand.Int())
+			w.lastStructLabel = functionLabel
+
 			s.body.Walk(w)
 			returnValue, ok := w.stack.Pop()
+
+			for idx, interrupt := range w.interruptionsPull.interruptions {
+				if strings.Contains(interrupt, functionLabel) {
+					w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
+				}
+			}
+
+			w.lastStructLabel = ""
 
 			if ok {
 				returnValue.Walk(w)
@@ -917,18 +936,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopIII
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -950,18 +969,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopIIF
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -992,18 +1011,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopIFI
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -1024,18 +1043,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopIFF
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -1073,18 +1092,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopFII
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -1105,18 +1124,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopFIF
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -1145,18 +1164,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopFFI
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -1176,18 +1195,18 @@ func (w Executor) EnterNode(n Node) bool {
 						res, _ := w.stack.Pop()
 						switch res.(type) {
 						case *Break:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
 							w.lastStructLabel = ""
 							break LoopFFF
 						case *Continue:
-							for idx, interrupt := range w.interruptions {
+							for idx, interrupt := range w.interruptionsPull.interruptions {
 								if strings.Contains(interrupt, loopLabel) {
-									w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+									w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 									break
 								}
 							}
@@ -1215,12 +1234,12 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *Break:
-		w.interruptions = append(w.interruptions, w.lastStructLabel+"_break")
+		w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions, w.lastStructLabel+"_break")
 		w.stack.Push(s)
 		return false
 
 	case *Continue:
-		w.interruptions = append(w.interruptions, w.lastStructLabel+"_continue")
+		w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions, w.lastStructLabel+"_continue")
 		w.stack.Push(s)
 		return false
 
@@ -1246,18 +1265,18 @@ func (w Executor) EnterNode(n Node) bool {
 
 				switch res.(type) {
 				case *Break:
-					for idx, interrupt := range w.interruptions {
+					for idx, interrupt := range w.interruptionsPull.interruptions {
 						if strings.Contains(interrupt, loopLabel) {
-							w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+							w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 							break
 						}
 					}
 					w.lastStructLabel = ""
 					break Loop
 				case *Continue:
-					for idx, interrupt := range w.interruptions {
+					for idx, interrupt := range w.interruptionsPull.interruptions {
 						if strings.Contains(interrupt, loopLabel) {
-							w.interruptions = append(w.interruptions[:idx], w.interruptions[idx+1:]...)
+							w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 							break
 						}
 					}
@@ -1282,11 +1301,13 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *Return:
+		w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions, w.lastStructLabel+"__return")
 		w.stack.Push(s.value)
 		return false
 
 	case *Nil:
 		w.stack.Push(&Nil{s.Line})
+		return false
 	}
 
 	// clearing nil

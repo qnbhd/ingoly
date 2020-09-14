@@ -1,8 +1,11 @@
-declare prettyPrint(x) {
-    println(x)
-    return 1
+declare is2(x) {
+    if x == 2 {
+        println("I'm 2!")
+        return true
+    }
+    return false
 }
 
-var x := prettyPrint(10)
+var x := is2(3)
 
-println(x)
+print(x)
