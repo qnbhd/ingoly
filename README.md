@@ -18,8 +18,6 @@ Run ingoly with manage script `.\ingoly [Target]` for Linux and `ingoly [Target]
 Input INLY-code 
 
 ```go
-// variable declarations
-
 var x := 6
 var y := 6.89
 
@@ -37,28 +35,47 @@ for i in [0; 5) {
     println("Cycle 1 " + string(i))
 }
 
-
 for i in [0; 5] {
     println("Cycle 2 " + string(i))
 }
-
 
 for i in [0; 10; 2] {
     println("Cycle 3 " + string(i))
 }
 
-declare double_print(firstArg, secondArg) {
-    println(firstArg, secondArg)
-    println(firstArg, secondArg)
+// while cycle
+
+var temp := 1
+
+while temp < 10 {
+    println("While Cycle, iter:", temp)
+    if temp == 6 {
+        break
+    }
+    temp = temp + 1
 }
 
-double_print("Hello", "World")
+// function's declaring with type annotations
+declare simpleSum(x int, y float) -> int {
+    return int(x + y)
+}
+
+// function's returns nil
+declare nilFunction(x int, y int) {
+    println(x + y)
+}
+
+var z := simpleSum(5, 6.7)
+println(z)
+
+nilFunction(6, 7)
 
 // singe-comment
 
 /*
 multi-line comment
 */
+
 
 ```
 
@@ -84,89 +101,133 @@ Cycle 3 4
 Cycle 3 6 
 Cycle 3 8 
 Cycle 3 10 
-Hello World 
-Hello World 
+While Cycle, iter: 1 
+While Cycle, iter: 2 
+While Cycle, iter: 3 
+While Cycle, iter: 4 
+While Cycle, iter: 5 
+While Cycle, iter: 6 
+11 
+13  
 ```
 
 Ast-Tree print:
 
 ```go
-!--> Declaration Variable Parse (Parse) var 'x' Line 3
-   !--> Integer (Number) Value: 6, Line: 3
-!--> Declaration Variable Parse (Parse) var 'y' Line 4
-   !--> Float (Number) Value: 6.890, Line: 4
-!--> If Else Block Line 8
-!--> Logical Operation (Operation) '&&' Line 8
-   !--> Logical Operation (Operation) '>' Line 8
-      !--> Using Variable (Value) 'x' Line 8
-      !--> Integer (Number) Value: 3, Line: 8
-   !--> Logical Operation (Operation) '>' Line 8
-      !--> Using Variable (Value) 'y' Line 8
-      !--> Integer (Number) Value: 6, Line: 8
-!--> If Case Line 9
-!--> Block
-   !--> println Operator (Keyword) Line 9
-      !--> String (String) Value: true, Line: 9
-!--> Else Case 
-!--> Block
-   !--> println Operator (Keyword) Line 11
-      !--> String (String) Value: false, Line: 11
-!--> For Block [IterVar: 'i'] Line: 16
-!--> Start Section Line 17
-   !--> Integer (Number) Value: 0, Line: 16
-!--> Stop Section Line 17
-   !--> Integer (Number) Value: 5, Line: 16
-!--> Step Section Line 17
-   !--> Integer (Number) Value: 1, Line: 16
-!--> Iter Code Line 17
-!--> Block
-   !--> println Operator (Keyword) Line 17
-      !--> Binary Operation (Operation) '+' Line 17
-         !--> String (String) Value: Cycle 1 , Line: 17
-         !--> string Operator (Keyword) Line 17
-            !--> Using Variable (Value) 'i' Line 17
-!--> For Block [IterVar: 'i'] Line: 21
-!--> Start Section Line 22
-   !--> Integer (Number) Value: 0, Line: 21
-!--> Stop Section Line 22
-   !--> Integer (Number) Value: 5, Line: 21
-!--> Step Section Line 22
-   !--> Integer (Number) Value: 1, Line: 21
-!--> Iter Code Line 22
-!--> Block
-   !--> println Operator (Keyword) Line 22
-      !--> Binary Operation (Operation) '+' Line 22
-         !--> String (String) Value: Cycle 2 , Line: 22
-         !--> string Operator (Keyword) Line 22
-            !--> Using Variable (Value) 'i' Line 22
-!--> For Block [IterVar: 'i'] Line: 26
-!--> Start Section Line 27
-   !--> Integer (Number) Value: 0, Line: 26
-!--> Stop Section Line 27
-   !--> Integer (Number) Value: 10, Line: 26
-!--> Step Section Line 27
-   !--> Integer (Number) Value: 2, Line: 26
-!--> Iter Code Line 27
-!--> Block
-   !--> println Operator (Keyword) Line 27
-      !--> Binary Operation (Operation) '+' Line 27
-         !--> String (String) Value: Cycle 3 , Line: 27
-         !--> string Operator (Keyword) Line 27
-            !--> Using Variable (Value) 'i' Line 27
-!--> Declaration Function (Statement)Line 30
-!--> Arg Names: 
-   +- firstArg
-   +- secondArg
-!--> Block
-   !--> println Operator (Keyword) Line 31
-      !--> Using Variable (Value) 'firstArg' Line 31
-      !--> Using Variable (Value) 'secondArg' Line 31
-   !--> println Operator (Keyword) Line 32
-      !--> Using Variable (Value) 'firstArg' Line 32
-      !--> Using Variable (Value) 'secondArg' Line 32
-!--> double_print Operator (Keyword) Line 35
-   !--> String (String) Value: Hello, Line: 35
-   !--> String (String) Value: World, Line: 35
-
+!--> Declaration Variable (Statement) ['x'] |> Line 1
+   !--> Integer Number (Number) Value: '6' |> Line 1
+!--> Declaration Variable (Statement) ['y'] |> Line 2
+   !--> Float Number (Number) Value: '6.890' |> Line 2
+!--> If-Else Block (Block) |> Line 6
+   !--> If Condition (Condition) |> Line 6
+      !--> Logical Operation (Operation) '&&'' |> Line 6
+         !--> Logical Operation (Operation) '>'' |> Line 6
+            !--> Using Variable (Value) ['x'] |> Line 6
+            !--> Integer Number (Number) Value: '3' |> Line 6
+         !--> Logical Operation (Operation) '>'' |> Line 6
+            !--> Using Variable (Value) ['y'] |> Line 6
+            !--> Integer Number (Number) Value: '6' |> Line 6
+   !--> If Case (Case) |> Line 7
+      !--> Block |> Line 6
+         !--> Operator 'println' (Operator) |> Line 7
+            !--> String (String) Value: 'true' |> Line 7
+   !--> Else Case (Case) |> Line 6
+      !--> Block |> Line 8
+         !--> Operator 'println' (Operator) |> Line 9
+            !--> String (String) Value: 'false' |> Line 9
+!--> For Block [IterVar: 'i'] (Block) |> Line 14
+   !--> Start Section (Section) |> Line 15
+      !--> Integer Number (Number) Value: '0' |> Line 14
+   !--> Stop Section (Section) |> Line 15
+      !--> Integer Number (Number) Value: '5' |> Line 14
+   !--> Step Section (Section) |> Line 15
+      !--> Integer Number (Number) Value: '1' |> Line 14
+   !--> Iter Code Line 15
+      !--> Block |> Line 14
+         !--> Operator 'println' (Operator) |> Line 15
+            !--> Binary Operation (Operation) '+' |> Line 15
+               !--> String (String) Value: 'Cycle 1 ' |> Line 15
+               !--> Operator 'string' (Operator) |> Line 15
+                  !--> Using Variable (Value) ['i'] |> Line 15
+!--> For Block [IterVar: 'i'] (Block) |> Line 18
+   !--> Start Section (Section) |> Line 19
+      !--> Integer Number (Number) Value: '0' |> Line 18
+   !--> Stop Section (Section) |> Line 19
+      !--> Integer Number (Number) Value: '5' |> Line 18
+   !--> Step Section (Section) |> Line 19
+      !--> Integer Number (Number) Value: '1' |> Line 18
+   !--> Iter Code Line 19
+      !--> Block |> Line 18
+         !--> Operator 'println' (Operator) |> Line 19
+            !--> Binary Operation (Operation) '+' |> Line 19
+               !--> String (String) Value: 'Cycle 2 ' |> Line 19
+               !--> Operator 'string' (Operator) |> Line 19
+                  !--> Using Variable (Value) ['i'] |> Line 19
+!--> For Block [IterVar: 'i'] (Block) |> Line 22
+   !--> Start Section (Section) |> Line 23
+      !--> Integer Number (Number) Value: '0' |> Line 22
+   !--> Stop Section (Section) |> Line 23
+      !--> Integer Number (Number) Value: '10' |> Line 22
+   !--> Step Section (Section) |> Line 23
+      !--> Integer Number (Number) Value: '2' |> Line 22
+   !--> Iter Code Line 23
+      !--> Block |> Line 22
+         !--> Operator 'println' (Operator) |> Line 23
+            !--> Binary Operation (Operation) '+' |> Line 23
+               !--> String (String) Value: 'Cycle 3 ' |> Line 23
+               !--> Operator 'string' (Operator) |> Line 23
+                  !--> Using Variable (Value) ['i'] |> Line 23
+!--> Declaration Variable (Statement) ['temp'] |> Line 28
+   !--> Integer Number (Number) Value: '1' |> Line 28
+!--> While-Block (Block) |> Line 39
+!--> Cycle Condition (Condition) |> Line 39
+!--> Logical Operation (Operation) '<'' |> Line 30
+   !--> Using Variable (Value) ['temp'] |> Line 30
+   !--> Integer Number (Number) Value: '10' |> Line 30
+!--> Cycle Body (Block) |> Line 39
+!--> Block |> Line 30
+   !--> Operator 'println' (Operator) |> Line 31
+      !--> String (String) Value: 'While Cycle, iter:' |> Line 31
+      !--> Using Variable (Value) ['temp'] |> Line 31
+   !--> If-Else Block (Block) |> Line 32
+      !--> If Condition (Condition) |> Line 32
+         !--> Logical Operation (Operation) '=='' |> Line 32
+            !--> Using Variable (Value) ['temp'] |> Line 32
+            !--> Integer Number (Number) Value: '6' |> Line 32
+      !--> If Case (Case) |> Line 33
+         !--> Block |> Line 32
+            !--> Break (Statement) |> Line 34
+   !--> Assign Variable (Statement) ['temp'] |> Line 35
+      !--> Binary Operation (Operation) '+' |> Line 35
+         !--> Using Variable (Value) ['temp'] |> Line 35
+         !--> Integer Number (Number) Value: '1' |> Line 35
+!--> Declaration Function ['simpleSum'] (Statement) [annotation int] |> Line 39
+   !--> Arg Names: 
+      +- x [annotation: int]
+      +- y [annotation: float]
+   !--> Block |> Line 39
+      !--> Return (Statement) |> Line 41
+         !--> Operator 'int' (Operator) |> Line 40
+            !--> Binary Operation (Operation) '+' |> Line 40
+               !--> Using Variable (Value) ['x'] |> Line 40
+               !--> Using Variable (Value) ['y'] |> Line 40
+!--> Declaration Function ['nilFunction'] (Statement) [annotation nil] |> Line 44
+   !--> Arg Names: 
+      +- x [annotation: int]
+      +- y [annotation: int]
+   !--> Block |> Line 44
+      !--> Operator 'println' (Operator) |> Line 45
+         !--> Binary Operation (Operation) '+' |> Line 45
+            !--> Using Variable (Value) ['x'] |> Line 45
+            !--> Using Variable (Value) ['y'] |> Line 45
+!--> Declaration Variable (Statement) ['z'] |> Line 48
+   !--> Operator 'simpleSum' (Operator) |> Line 48
+      !--> Integer Number (Number) Value: '5' |> Line 48
+      !--> Float Number (Number) Value: '6.700' |> Line 48
+!--> Operator 'println' (Operator) |> Line 49
+   !--> Using Variable (Value) ['z'] |> Line 49
+!--> Operator 'nilFunction' (Operator) |> Line 51
+   !--> Integer Number (Number) Value: '6' |> Line 51
+   !--> Integer Number (Number) Value: '7' |> Line 51
 ```
 
