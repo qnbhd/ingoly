@@ -58,12 +58,8 @@ func (w Printer) EnterNode(n Node) bool {
 		s.op1.Walk(w)
 		return false
 
-	case *UsingVariableNode:
-		color.Blue("!--> Using Variable (Value) '" + s.name + "' " + "Line " + strconv.Itoa(s.Line))
-		return false
-
 	case *ScopeVar:
-		color.Green("!--> Scope Variable (Value) '" + s.Name + "' " + "Line " + strconv.Itoa(s.Line))
+		color.Blue("!--> Using Variable (Value) '" + s.name + "' " + "Line " + strconv.Itoa(s.Line))
 		return false
 
 	case *IntNumber:
@@ -162,9 +158,12 @@ func (w Printer) EnterNode(n Node) bool {
 
 	case *FunctionDeclareNode:
 		color.Green("!--> Declaration Function ['%s'] (Statement) Line: %d ", s.name, s.Line)
-		color.HiGreen("   !--> Arg Names: ")
-		for _, item := range s.argNames {
-			color.Blue("      +- %s", item)
+
+		if len(s.argNames) != 0 {
+			color.HiGreen("   !--> Arg Names: ")
+			for _, item := range s.argNames {
+				color.Blue("      +- %s", item)
+			}
 		}
 		w.IndentLevel++
 		s.body.Walk(w)

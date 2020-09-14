@@ -38,17 +38,6 @@ func (bn *BlockNode) Walk(v Visitor) {
 	v.LeaveNode(bn)
 }
 
-type ScopeVar struct {
-	Name string
-	Line int
-}
-
-func (as *ScopeVar) Walk(v Visitor) {
-	v.EnterNode(as)
-
-	v.LeaveNode(as)
-}
-
 ////////////////
 
 /* Binary Node */
@@ -95,12 +84,12 @@ func (un *UnaryNode) Walk(v Visitor) {
 
 /* Name Node */
 
-type UsingVariableNode struct {
+type ScopeVar struct {
 	name string
 	Line int
 }
 
-func (uvn *UsingVariableNode) Walk(v Visitor) {
+func (uvn *ScopeVar) Walk(v Visitor) {
 	if !v.EnterNode(uvn) {
 		return
 	}

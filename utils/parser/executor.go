@@ -635,7 +635,7 @@ func (w Executor) EnterNode(n Node) bool {
 
 		return false
 
-	case *UsingVariableNode:
+	case *ScopeVar:
 		w.stack.Push(w.ctx.Vars[s.name])
 		return false
 
@@ -856,6 +856,8 @@ func (w Executor) EnterNode(n Node) bool {
 		}
 
 		functor(w, s, 1, s.Line)
+
+		w.ClearStackLastNil()
 
 		return false
 
@@ -1309,21 +1311,6 @@ func (w Executor) EnterNode(n Node) bool {
 		w.stack.Push(&Nil{s.Line})
 		return false
 	}
-
-	// clearing nil
-
-	switch n.(type) {
-	case *DeclarationNode:
-	case *AssignNode:
-	case *FunctionalNode:
-	//case *ForNode:
-	//case *While:
-	//case *IfNode:
-	default:
-		return true
-	}
-
-	w.ClearStackLastNil()
 
 	return true
 

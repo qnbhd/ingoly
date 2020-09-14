@@ -38,7 +38,7 @@ func (ps *Parser) atomic() Node {
 		return ps.Function()
 	}
 	if ps.match(tokenizer.NAME) {
-		return &UsingVariableNode{name: current.Lexeme, Line: line}
+		return &ScopeVar{name: current.Lexeme, Line: line}
 	}
 
 	panic("WTF")

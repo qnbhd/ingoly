@@ -1,6 +1,8 @@
 package parser
 
-import "ingoly/utils/tokenizer"
+import (
+	"ingoly/utils/tokenizer"
+)
 
 func (ps *Parser) Node() Node {
 
@@ -55,15 +57,14 @@ func (ps *Parser) Function() Node {
 	ps.consume(tokenizer.LPAR)
 
 	var args []Node
-	var res Node
+	res := FunctionalNode{args, targetFuncName, ps.get(0).Line}
 
 	for !ps.match(tokenizer.RPAR) {
-		args = append(args, ps.Expression())
-		res = &FunctionalNode{args, targetFuncName, ps.get(0).Line}
+		res.arguments = append(res.arguments, ps.Expression())
 		ps.match(tokenizer.COMMA)
 	}
 
-	return res
+	return &res
 }
 
 func (ps *Parser) IfElseBlock() Node {

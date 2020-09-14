@@ -25,7 +25,6 @@ func main() {
 
 	lx := tokenizer.New(string(data))
 	result, lexErrorPull := lx.Tokenize()
-	fmt.Println(result)
 
 	if !lexErrorPull.IsEmpty() {
 		lexErrorPull.Print()

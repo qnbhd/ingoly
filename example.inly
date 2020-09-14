@@ -1,11 +1,5 @@
-declare is2(x) {
-    if x == 2 {
-        println("I'm 2!")
-        return true
-    }
-    return false
+declare printHello() {
+    println("Hello")
 }
 
-var x := is2(3)
-
-print(x)
+printHello()
