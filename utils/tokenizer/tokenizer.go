@@ -60,7 +60,7 @@ func GetReservedOperators() *Reserved {
 	ops.Operators["^="] = CIRCUMFLEXEQUAL
 
 	ops.Operators["&&"] = AMPERAMPER
-	ops.Operators["+"] = PLUS
+	ops.Operators["->"] = ARROW
 
 	return &ops
 }

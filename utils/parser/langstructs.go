@@ -137,16 +137,31 @@ func (ps *Parser) FuncDeclaration() Node {
 	ps.consume(tokenizer.NAME)
 	ps.consume(tokenizer.LPAR)
 
-	var argNames []string
+	var argNames []VarWithAnnotation
+
 	for !ps.match(tokenizer.RPAR) {
-		res, _ := ps.consume(tokenizer.NAME)
+		varName, _ := ps.consume(tokenizer.NAME)
+		varAnnotation, _ := ps.consume(tokenizer.NAME)
+		resultVar := VarWithAnnotation{varName.Lexeme, varAnnotation.Lexeme}
 		ps.match(tokenizer.COMMA)
-		argNames = append(argNames, res.Lexeme)
+		argNames = append(argNames, resultVar)
+	}
+
+	returnAnnotation := "nil"
+
+	if ps.get(0).Type == tokenizer.ARROW {
+		ps.consume(tokenizer.ARROW)
+		res, _ := ps.consume(tokenizer.NAME)
+		returnAnnotation = res.Lexeme
 	}
 
 	body := ps.StatementOrBlock()
 
-	return &FunctionDeclareNode{name, argNames, body, line}
+	return &FunctionDeclareNode{name,
+		argNames,
+		returnAnnotation,
+		body,
+		line}
 }
 
 func (ps *Parser) ReturnStmt() Node {

@@ -6,6 +6,7 @@ import (
 	"ingoly/utils/errpull"
 	"math"
 	"math/rand"
+	"reflect"
 	"strings"
 )
 
@@ -46,6 +47,14 @@ func (w *Executor) copyUpdatedVars(ctx *BlockContext) {
 
 func (w *Executor) switchMainContext() {
 	w.currentContext = w.mainContext
+}
+
+func IsInstanceOf(objectPtr, typePtr interface{}) bool {
+	return reflect.TypeOf(objectPtr) == reflect.TypeOf(typePtr)
+}
+
+func typeof(v interface{}) string {
+	return reflect.TypeOf(v).String()
 }
 
 type InterruptionsPull struct {
@@ -837,7 +846,7 @@ func (w Executor) EnterNode(n Node) bool {
 
 			//ctxVariables := map[string]Node{}
 
-			reverseAny(s.argNames)
+			reverseAny(s.args)
 
 			functionLabel := fmt.Sprintf("__function%d", rand.Int())
 			w.lastStructLabel = functionLabel
@@ -846,33 +855,64 @@ func (w Executor) EnterNode(n Node) bool {
 			// TODO general access
 			functionCtx.Functions = w.mainContext.Functions
 
-			for _, arg := range s.argNames {
+			bijectionAnnotationTypes := map[string]string{}
+
+			bijectionAnnotationTypes["IntNumber"] = "int"
+			bijectionAnnotationTypes["FloatNumber"] = "float"
+			bijectionAnnotationTypes["Boolean"] = "boolean"
+			bijectionAnnotationTypes["String"] = "string"
+			bijectionAnnotationTypes["Nil"] = "nil"
+
+			flagCorrectAnnotations := true
+			for _, arg := range s.args {
 				_receivedArg, _ := w.stack.Pop()
-				functionCtx.Vars[arg] = _receivedArg
-			}
+				_receivedArgType := typeof(_receivedArg)[len("*parser."):]
 
-			w.currentContext = functionCtx
-
-			s.body.Walk(w)
-			returnValue, ok := w.stack.Pop()
-
-			for idx, interrupt := range w.interruptionsPull.interruptions {
-				if strings.Contains(interrupt, functionLabel) {
-					w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
+				if arg.annotation != bijectionAnnotationTypes[_receivedArgType] {
+					err := errors.New(
+						fmt.Sprintf("invalid type of argument '%s' (expected %s, getted %s)",
+							arg.name, arg.annotation, bijectionAnnotationTypes[_receivedArgType]))
+					w.CreatePullError(err, s.Line)
+					flagCorrectAnnotations = false
 				}
+				functionCtx.Vars[arg.name] = _receivedArg
 			}
 
-			w.lastStructLabel = ""
+			if flagCorrectAnnotations {
 
-			if ok {
-				returnValue.Walk(w)
-				result, _ := w.stack.Pop()
-				w.stack.Push(result)
-			} else {
-				w.stack.Push(&Nil{Line: line})
+				w.currentContext = functionCtx
+
+				s.body.Walk(w)
+				returnValue, ok := w.stack.Pop()
+
+				for idx, interrupt := range w.interruptionsPull.interruptions {
+					if strings.Contains(interrupt, functionLabel) {
+						w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
+					}
+				}
+
+				w.lastStructLabel = ""
+
+				returnAnnotation := "*parser.Nil"
+				if ok {
+					returnValue.Walk(w)
+					result, _ := w.stack.Pop()
+					returnAnnotation = typeof(result)
+					w.stack.Push(result)
+				} else {
+					w.stack.Push(&Nil{Line: line})
+				}
+
+				_retArgType := returnAnnotation[len("*parser."):]
+				if s.returnAnnotation != bijectionAnnotationTypes[_retArgType] {
+					err := errors.New(
+						fmt.Sprintf("invalid type of return value in function '%s' (expected %s, getted %s)",
+							s.name, s.returnAnnotation, bijectionAnnotationTypes[_retArgType]))
+					w.CreatePullError(err, s.Line)
+				}
+
+				w.switchMainContext()
 			}
-
-			w.switchMainContext()
 
 		}
 

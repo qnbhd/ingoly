@@ -163,12 +163,13 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *FunctionDeclareNode:
-		defaultInfoPrint(color.Green, s.Line, fmt.Sprintf("Declaration Function ['%s'] (Statement)", s.name))
+		defaultInfoPrint(color.Green, s.Line,
+			fmt.Sprintf("Declaration Function ['%s'] (Statement) [annotation %s]", s.name, s.returnAnnotation))
 
-		if len(s.argNames) != 0 {
+		if len(s.args) != 0 {
 			color.HiGreen("   !--> Arg Names: ")
-			for _, item := range s.argNames {
-				color.Blue("      +- %s", item)
+			for _, item := range s.args {
+				color.Blue("      +- %s [annotation: %s]", item.name, item.annotation)
 			}
 		}
 		w.IndentLevel++

@@ -179,10 +179,11 @@ func (ps *FunctionalNode) Walk(v Visitor) {
 }
 
 type FunctionDeclareNode struct {
-	name     string
-	argNames []string
-	body     Node
-	Line     int
+	name             string
+	args             []VarWithAnnotation
+	returnAnnotation string
+	body             Node
+	Line             int
 }
 
 func (ps *FunctionDeclareNode) Walk(v Visitor) {
