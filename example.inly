@@ -36,7 +36,7 @@ while temp < 10 {
 }
 
 // function's declaring with type annotations
-declare simpleSum(x int, y float) -> int {
+declare simpleSum(x @int, y @float) -> int {
     return int(x + y)
 }
 

@@ -1,8 +1,8 @@
-package tokenizer
+package parser
 
 import (
 	"errors"
-	"ingoly/utils/errpull"
+	"ingoly/errpull"
 	"strings"
 	"unicode"
 )

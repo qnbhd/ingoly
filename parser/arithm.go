@@ -1,17 +1,15 @@
 package parser
 
-import "ingoly/utils/tokenizer"
-
 func (ps *Parser) Additive() Node {
 	result := ps.Mult()
 
 	for {
 		line := ps.get(0).Line
-		if ps.match(tokenizer.PLUS) {
+		if ps.match(PLUS) {
 			result = &BinaryNode{"+", result, ps.Additive(), line}
 			continue
 		}
-		if ps.match(tokenizer.MINUS) {
+		if ps.match(MINUS) {
 			result = &BinaryNode{"-", result, ps.Additive(), line}
 			continue
 		}
@@ -26,11 +24,11 @@ func (ps *Parser) Mult() Node {
 
 	for {
 		line := ps.get(0).Line
-		if ps.match(tokenizer.STAR) {
+		if ps.match(STAR) {
 			result = &BinaryNode{"*", result, ps.Unary(), line}
 			continue
 		}
-		if ps.match(tokenizer.SLASH) {
+		if ps.match(SLASH) {
 			result = &BinaryNode{"/", result, ps.Unary(), line}
 			continue
 		}
@@ -42,7 +40,7 @@ func (ps *Parser) Mult() Node {
 
 func (ps *Parser) Unary() Node {
 	line := ps.get(0).Line
-	if ps.match(tokenizer.MINUS) {
+	if ps.match(MINUS) {
 		return &UnaryNode{"-", ps.atomic(), line}
 	}
 	return ps.atomic()

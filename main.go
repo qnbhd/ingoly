@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"ingoly/utils/parser"
-	"ingoly/utils/tokenizer"
+	"ingoly/parser"
 	"io/ioutil"
 	"os"
 )
@@ -23,7 +22,7 @@ func main() {
 		return
 	}
 
-	lx := tokenizer.New(string(data))
+	lx := parser.New(string(data))
 	result, lexErrorPull := lx.Tokenize()
 
 	if !lexErrorPull.IsEmpty() {

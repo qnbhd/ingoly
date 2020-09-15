@@ -3,7 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"ingoly/utils/errpull"
+	"ingoly/errpull"
 	"math"
 	"math/rand"
 	"reflect"

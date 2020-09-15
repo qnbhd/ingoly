@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"ingoly/utils/errpull"
+	"ingoly/errpull"
 )
 
 type Ast struct {
