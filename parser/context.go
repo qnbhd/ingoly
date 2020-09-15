@@ -1,11 +1,11 @@
 package parser
 
-type BlockContext struct {
+type Context struct {
 	Vars      map[string]Node
 	Functions map[string]func(w Executor, curNode Node, argCount, line int)
 }
 
-func NewBlockContext() *BlockContext {
-	return &BlockContext{Vars: make(map[string]Node),
+func NewContext() *Context {
+	return &Context{Vars: make(map[string]Node),
 		Functions: make(map[string]func(w Executor, s Node, argCount, line int))}
 }

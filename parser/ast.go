@@ -16,8 +16,17 @@ func (ast *Ast) Print() {
 	}
 }
 
-func (ast *Ast) Execute() *errpull.ErrorsPull {
-	p := NewExecutor()
+func (ast *Ast) Index() *Context {
+	p := NewIndexer()
+	for _, stmt := range ast.Tree {
+		stmt.Walk(p)
+	}
+	return p.Ctx
+}
+
+func (ast *Ast) Execute(indexedContext *Context) *errpull.ErrorsPull {
+	p := NewExecutor(indexedContext)
+
 	for _, stmt := range ast.Tree {
 		stmt.Walk(p)
 	}

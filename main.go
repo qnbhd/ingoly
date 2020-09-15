@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"ingoly/parser"
+	"ingoly/parser/tokenizer"
 	"io/ioutil"
 	"os"
 )
@@ -22,7 +23,7 @@ func main() {
 		return
 	}
 
-	lx := parser.New(string(data))
+	lx := tokenizer.New(string(data))
 	result, lexErrorPull := lx.Tokenize()
 
 	if !lexErrorPull.IsEmpty() {
@@ -41,6 +42,8 @@ func main() {
 
 	ast.Print()
 
-	semanticPullError := ast.Execute()
+	indexedContext := ast.Index()
+
+	semanticPullError := ast.Execute(indexedContext)
 	semanticPullError.Print()
 }

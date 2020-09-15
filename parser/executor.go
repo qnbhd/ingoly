@@ -18,20 +18,20 @@ func BoolTernary(statement bool, a, b bool) bool {
 }
 
 func (w *Executor) ClearStackLastNil() {
-	__last, ok := w.stack.Pop()
+	__last, ok := w.Stack.Pop()
 
 	if ok {
 		switch __last.(type) {
 		case *Nil:
 			return
 		default:
-			w.stack.Push(__last)
+			w.Stack.Push(__last)
 		}
 	}
 }
 
-func (w *Executor) forkNewContext() *BlockContext {
-	newCtx := NewBlockContext()
+func (w *Executor) forkNewContext() *Context {
+	newCtx := NewContext()
 	for name, node := range w.mainContext.Vars {
 		newCtx.Vars[name] = node
 	}
@@ -39,7 +39,7 @@ func (w *Executor) forkNewContext() *BlockContext {
 	return newCtx
 }
 
-func (w *Executor) copyUpdatedVars(ctx *BlockContext) {
+func (w *Executor) copyUpdatedVars(ctx *Context) {
 	for name, _ := range w.mainContext.Vars {
 		w.mainContext.Vars[name] = ctx.Vars[name]
 	}
@@ -47,10 +47,6 @@ func (w *Executor) copyUpdatedVars(ctx *BlockContext) {
 
 func (w *Executor) switchMainContext() {
 	w.currentContext = w.mainContext
-}
-
-func IsInstanceOf(objectPtr, typePtr interface{}) bool {
-	return reflect.TypeOf(objectPtr) == reflect.TypeOf(typePtr)
 }
 
 func typeof(v interface{}) string {
@@ -70,23 +66,15 @@ const (
 )
 
 type Executor struct {
-	currentContext    *BlockContext
-	mainContext       *BlockContext
-	stack             *Stack
+	currentContext    *Context
+	mainContext       *Context
+	Stack             *Stack
 	ErrorsPull        *errpull.ErrorsPull
 	lastStructLabel   string
 	interruptionsPull *InterruptionsPull
 }
 
-func NewExecutor() Executor {
-	ctx := NewBlockContext()
-	ctx.Functions["sin"] = __InBoxSin
-	ctx.Functions["print"] = __InBoxPrint
-	ctx.Functions["println"] = __InBoxPrintln
-	ctx.Functions["int"] = __TypeCastingInt
-	ctx.Functions["float"] = __TypeCastingFloat
-	ctx.Functions["boolean"] = __TypeCastingBoolean
-	ctx.Functions["string"] = __TypeCastingString
+func NewExecutor(ctx *Context) Executor {
 
 	return Executor{ctx,
 		ctx,
@@ -110,7 +98,7 @@ func (w Executor) EnterNode(n Node) bool {
 	switch s := n.(type) {
 	case *BinaryNode:
 		s.op1.Walk(w)
-		op1, ok := w.stack.Pop()
+		op1, ok := w.Stack.Pop()
 
 		if op1 == nil || !ok {
 			err := errors.New("using var before initialization")
@@ -119,7 +107,7 @@ func (w Executor) EnterNode(n Node) bool {
 		}
 
 		s.op2.Walk(w)
-		op2, ok := w.stack.Pop()
+		op2, ok := w.Stack.Pop()
 
 		if op2 == nil || !ok {
 			err := errors.New("using var before initialization")
@@ -133,11 +121,11 @@ func (w Executor) EnterNode(n Node) bool {
 			case *IntNumber:
 				switch s.operation {
 				case "+":
-					w.stack.Push(&IntNumber{__T1.value + __T2.value, s.Line})
+					w.Stack.Push(&IntNumber{__T1.value + __T2.value, s.Line})
 				case "-":
-					w.stack.Push(&IntNumber{__T1.value - __T2.value, s.Line})
+					w.Stack.Push(&IntNumber{__T1.value - __T2.value, s.Line})
 				case "*":
-					w.stack.Push(&IntNumber{__T1.value * __T2.value, s.Line})
+					w.Stack.Push(&IntNumber{__T1.value * __T2.value, s.Line})
 				case "/":
 					if __T2.value == 0 {
 						err := errors.New("division by zero")
@@ -145,27 +133,27 @@ func (w Executor) EnterNode(n Node) bool {
 					} else {
 						__T1Casted := float64(__T1.value)
 						__T2Casted := float64(__T2.value)
-						w.stack.Push(&FloatNumber{__T1Casted / __T2Casted, s.Line})
+						w.Stack.Push(&FloatNumber{__T1Casted / __T2Casted, s.Line})
 					}
 				}
 			case *FloatNumber:
 				switch s.operation {
 				case "+":
 					__T1Casted := float64(__T1.value)
-					w.stack.Push(&FloatNumber{__T1Casted + __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1Casted + __T2.value, s.Line})
 				case "-":
 					__T1Casted := float64(__T1.value)
-					w.stack.Push(&FloatNumber{__T1Casted - __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1Casted - __T2.value, s.Line})
 				case "*":
 					__T1Casted := float64(__T1.value)
-					w.stack.Push(&FloatNumber{__T1Casted * __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1Casted * __T2.value, s.Line})
 				case "/":
 					if math.Abs(__T2.value) < __ArithmeticsEPS {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					} else {
 						__T1Casted := float64(__T1.value)
-						w.stack.Push(&FloatNumber{__T1Casted / __T2.value, s.Line})
+						w.Stack.Push(&FloatNumber{__T1Casted / __T2.value, s.Line})
 					}
 				}
 			case *Boolean:
@@ -178,7 +166,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1.value + __T2Casted, s.Line})
+					w.Stack.Push(&IntNumber{__T1.value + __T2Casted, s.Line})
 				case "-":
 					var __T2Casted int
 					switch __T2.value {
@@ -187,7 +175,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1.value - __T2Casted, s.Line})
+					w.Stack.Push(&IntNumber{__T1.value - __T2Casted, s.Line})
 				case "*":
 					var __T2Casted int
 					switch __T2.value {
@@ -196,7 +184,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1.value * __T2Casted, s.Line})
+					w.Stack.Push(&IntNumber{__T1.value * __T2Casted, s.Line})
 				case "/":
 					var __T2Casted float64
 					switch __T2.value {
@@ -210,7 +198,7 @@ func (w Executor) EnterNode(n Node) bool {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					} else {
-						w.stack.Push(&FloatNumber{__T1Casted / __T2Casted, s.Line})
+						w.Stack.Push(&FloatNumber{__T1Casted / __T2Casted, s.Line})
 					}
 				}
 			case *String:
@@ -220,7 +208,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := 0; i < __T1.value; i++ {
 						__Result += __T2.value
 					}
-					w.stack.Push(&String{__Result, s.Line})
+					w.Stack.Push(&String{__Result, s.Line})
 				case "+":
 					fallthrough
 				case "-":
@@ -236,36 +224,36 @@ func (w Executor) EnterNode(n Node) bool {
 				switch s.operation {
 				case "+":
 					__T2Casted := float64(__T2.value)
-					w.stack.Push(&FloatNumber{__T1.value + __T2Casted, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value + __T2Casted, s.Line})
 				case "-":
 					__T2Casted := float64(__T2.value)
-					w.stack.Push(&FloatNumber{__T1.value - __T2Casted, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value - __T2Casted, s.Line})
 				case "*":
 					__T2Casted := float64(__T2.value)
-					w.stack.Push(&FloatNumber{__T1.value * __T2Casted, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value * __T2Casted, s.Line})
 				case "/":
 					if __T2.value == 0 {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					} else {
 						__T2Casted := float64(__T2.value)
-						w.stack.Push(&FloatNumber{__T1.value / __T2Casted, s.Line})
+						w.Stack.Push(&FloatNumber{__T1.value / __T2Casted, s.Line})
 					}
 				}
 			case *FloatNumber:
 				switch s.operation {
 				case "+":
-					w.stack.Push(&FloatNumber{__T1.value + __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value + __T2.value, s.Line})
 				case "-":
-					w.stack.Push(&FloatNumber{__T1.value - __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value - __T2.value, s.Line})
 				case "*":
-					w.stack.Push(&FloatNumber{__T1.value * __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value * __T2.value, s.Line})
 				case "/":
 					if math.Abs(__T2.value) < __ArithmeticsEPS {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					} else {
-						w.stack.Push(&FloatNumber{__T1.value * __T2.value, s.Line})
+						w.Stack.Push(&FloatNumber{__T1.value * __T2.value, s.Line})
 					}
 				}
 			case *Boolean:
@@ -278,7 +266,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0.0
 					}
-					w.stack.Push(&FloatNumber{__T1.value + __T2Casted, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value + __T2Casted, s.Line})
 				case "-":
 					var __T2Casted float64
 					switch __T2.value {
@@ -287,7 +275,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0.0
 					}
-					w.stack.Push(&FloatNumber{__T1.value - __T2Casted, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value - __T2Casted, s.Line})
 				case "*":
 					var __T2Casted float64
 					switch __T2.value {
@@ -296,7 +284,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0.0
 					}
-					w.stack.Push(&FloatNumber{__T1.value + __T2Casted, s.Line})
+					w.Stack.Push(&FloatNumber{__T1.value + __T2Casted, s.Line})
 				case "/":
 					var __T2Casted float64
 					switch __T2.value {
@@ -309,7 +297,7 @@ func (w Executor) EnterNode(n Node) bool {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					} else {
-						w.stack.Push(&FloatNumber{__T1.value / __T2Casted, s.Line})
+						w.Stack.Push(&FloatNumber{__T1.value / __T2Casted, s.Line})
 					}
 				}
 			case *String:
@@ -337,7 +325,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T1Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1Casted + __T2.value, s.Line})
+					w.Stack.Push(&IntNumber{__T1Casted + __T2.value, s.Line})
 				case "-":
 					var __T1Casted int
 					switch __T1.value {
@@ -346,7 +334,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T1Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1Casted - __T2.value, s.Line})
+					w.Stack.Push(&IntNumber{__T1Casted - __T2.value, s.Line})
 				case "*":
 					var __T1Casted int
 					switch __T1.value {
@@ -355,7 +343,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T1Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1Casted * __T2.value, s.Line})
+					w.Stack.Push(&IntNumber{__T1Casted * __T2.value, s.Line})
 				case "/":
 					var __T1Casted int
 					switch __T1.value {
@@ -368,7 +356,7 @@ func (w Executor) EnterNode(n Node) bool {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					} else {
-						w.stack.Push(&IntNumber{__T1Casted + __T2.value, s.Line})
+						w.Stack.Push(&IntNumber{__T1Casted + __T2.value, s.Line})
 					}
 				}
 			case *FloatNumber:
@@ -381,7 +369,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T1Casted = 0.0
 					}
-					w.stack.Push(&FloatNumber{__T1Casted + __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1Casted + __T2.value, s.Line})
 				case "-":
 					var __T1Casted float64
 					switch __T1.value {
@@ -390,7 +378,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T1Casted = 0.0
 					}
-					w.stack.Push(&FloatNumber{__T1Casted - __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1Casted - __T2.value, s.Line})
 				case "*":
 					var __T1Casted float64
 					switch __T1.value {
@@ -399,7 +387,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T1Casted = 0.0
 					}
-					w.stack.Push(&FloatNumber{__T1Casted * __T2.value, s.Line})
+					w.Stack.Push(&FloatNumber{__T1Casted * __T2.value, s.Line})
 				case "/":
 					var __T1Casted float64
 					switch __T1.value {
@@ -413,7 +401,7 @@ func (w Executor) EnterNode(n Node) bool {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					} else {
-						w.stack.Push(&FloatNumber{__T1Casted / __T2.value, s.Line})
+						w.Stack.Push(&FloatNumber{__T1Casted / __T2.value, s.Line})
 					}
 				}
 			case *Boolean:
@@ -433,7 +421,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1Casted + __T2Casted, s.Line})
+					w.Stack.Push(&IntNumber{__T1Casted + __T2Casted, s.Line})
 				case "-":
 					var __T1Casted int
 					switch __T1.value {
@@ -449,7 +437,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1Casted - __T2Casted, s.Line})
+					w.Stack.Push(&IntNumber{__T1Casted - __T2Casted, s.Line})
 				case "*":
 					var __T1Casted int
 					switch __T1.value {
@@ -465,7 +453,7 @@ func (w Executor) EnterNode(n Node) bool {
 					case false:
 						__T2Casted = 0
 					}
-					w.stack.Push(&IntNumber{__T1Casted * __T2Casted, s.Line})
+					w.Stack.Push(&IntNumber{__T1Casted * __T2Casted, s.Line})
 				case "/":
 					var __T1Casted int
 					switch __T1.value {
@@ -485,7 +473,7 @@ func (w Executor) EnterNode(n Node) bool {
 						err := errors.New("division by zero")
 						w.CreatePullError(err, s.Line)
 					}
-					w.stack.Push(&IntNumber{__T1Casted / __T2Casted, s.Line})
+					w.Stack.Push(&IntNumber{__T1Casted / __T2Casted, s.Line})
 				}
 			case *String:
 				switch s.operation {
@@ -509,7 +497,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := 0; i < __T2.value; i++ {
 						__Result += __T1.value
 					}
-					w.stack.Push(&String{__Result, s.Line})
+					w.Stack.Push(&String{__Result, s.Line})
 				case "+":
 					fallthrough
 				case "-":
@@ -545,7 +533,7 @@ func (w Executor) EnterNode(n Node) bool {
 			case *String:
 				switch s.operation {
 				case "+":
-					w.stack.Push(&String{__T1.value + __T2.value, s.Line})
+					w.Stack.Push(&String{__T1.value + __T2.value, s.Line})
 				case "-":
 					fallthrough
 				case "*":
@@ -561,7 +549,7 @@ func (w Executor) EnterNode(n Node) bool {
 
 	case *DeclarationNode:
 		s.Expression.Walk(w)
-		w.currentContext.Vars[s.Variable], _ = w.stack.Pop()
+		w.currentContext.Vars[s.Variable], _ = w.Stack.Pop()
 		return false
 
 	case *AssignNode:
@@ -571,7 +559,7 @@ func (w Executor) EnterNode(n Node) bool {
 		}
 
 		s.Expression.Walk(w)
-		result, _ := w.stack.Pop()
+		result, _ := w.Stack.Pop()
 
 		switch w.currentContext.Vars[s.Variable].(type) {
 		case *IntNumber:
@@ -635,7 +623,7 @@ func (w Executor) EnterNode(n Node) bool {
 
 	case *UnaryNode:
 		s.Walk(w)
-		op1, ok := w.stack.Pop()
+		op1, ok := w.Stack.Pop()
 
 		if op1 == nil || !ok {
 			err := errors.New("using var before initialization")
@@ -646,16 +634,16 @@ func (w Executor) EnterNode(n Node) bool {
 		case *IntNumber:
 			switch s.operation {
 			case "-":
-				w.stack.Push(&IntNumber{-op.value, s.Line})
+				w.Stack.Push(&IntNumber{-op.value, s.Line})
 			case "+":
-				w.stack.Push(&IntNumber{op.value, s.Line})
+				w.Stack.Push(&IntNumber{op.value, s.Line})
 			}
 		case *FloatNumber:
 			switch s.operation {
 			case "-":
-				w.stack.Push(&FloatNumber{-op.value, s.Line})
+				w.Stack.Push(&FloatNumber{-op.value, s.Line})
 			case "+":
-				w.stack.Push(&FloatNumber{op.value, s.Line})
+				w.Stack.Push(&FloatNumber{op.value, s.Line})
 			}
 		case *Boolean:
 			err := errors.New("invalid unary operation for boolean")
@@ -674,29 +662,83 @@ func (w Executor) EnterNode(n Node) bool {
 			w.CreatePullError(err, s.Line)
 			return false
 		}
-		w.stack.Push(w.currentContext.Vars[s.name])
+		w.Stack.Push(w.currentContext.Vars[s.name])
 		return false
 
 	case *IntNumber:
-		w.stack.Push(s)
+		w.Stack.Push(s)
 		return false
 
 	case *FloatNumber:
-		w.stack.Push(s)
+		w.Stack.Push(s)
 		return false
 
 	case *Boolean:
-		w.stack.Push(s)
+		w.Stack.Push(s)
 		return false
 
 	case *String:
-		w.stack.Push(s)
+		w.Stack.Push(s)
+		return false
+
+	case *Array:
+		w.Stack.Push(s)
+		return false
+
+	case *CollectionAccess:
+		result, ok := w.currentContext.Vars[s.variableName]
+
+		if !ok {
+			err := errors.New(fmt.Sprintf("using undefined array to access '%s'", s.variableName))
+			w.CreatePullError(err, s.Line)
+			return false
+		}
+
+		s.index.Walk(w)
+		index, ok := w.Stack.Pop()
+
+		if !ok {
+			err := errors.New(fmt.Sprintf("invalid index for array access to '%s'", s.variableName))
+			w.CreatePullError(err, s.Line)
+			return false
+		}
+
+		switch collection := result.(type) {
+		case *Array:
+			switch idx := index.(type) {
+			case *IntNumber:
+				if idx.value < len(collection.Elements) {
+					w.Stack.Push(collection.Elements[idx.value])
+				} else {
+					err := errors.New(
+						fmt.Sprintf("index out of range for array access to '%s' [%d] with length %d",
+							s.variableName, idx.value, len(collection.Elements)))
+					w.CreatePullError(err, s.Line)
+					return false
+				}
+			}
+		case *String:
+			switch idx := index.(type) {
+			case *IntNumber:
+				stringCollection := []rune(collection.value)
+				if idx.value < len(stringCollection) {
+					w.Stack.Push(&String{string(stringCollection[idx.value]), s.Line})
+				} else {
+					err := errors.New(
+						fmt.Sprintf("index out of range for string access to '%s' [%d] with length %d",
+							s.variableName, idx.value, len(stringCollection)))
+					w.CreatePullError(err, s.Line)
+					return false
+				}
+			}
+		}
+
 		return false
 
 	case *ConditionalNode:
 
 		s.op1.Walk(w)
-		op1, ok := w.stack.Pop()
+		op1, ok := w.Stack.Pop()
 
 		if op1 == nil || !ok {
 			err := errors.New("using var before initialization")
@@ -705,7 +747,7 @@ func (w Executor) EnterNode(n Node) bool {
 		}
 
 		s.op2.Walk(w)
-		op2, ok := w.stack.Pop()
+		op2, ok := w.Stack.Pop()
 
 		if op2 == nil || !ok {
 			err := errors.New("using var before initialization")
@@ -836,85 +878,85 @@ func (w Executor) EnterNode(n Node) bool {
 			result = (__CmpOp1 != 0) && (__CmpOp2 != 0)
 		}
 
-		w.stack.Push(&Boolean{result, s.Line})
+		w.Stack.Push(&Boolean{result, s.Line})
 
 		return false
 
 	case *FunctionDeclareNode:
 
-		w.currentContext.Functions[s.name] = func(w Executor, curNode Node, argCount, line int) {
-
-			//ctxVariables := map[string]Node{}
-
-			reverseAny(s.args)
-
-			functionLabel := fmt.Sprintf("__function%d", rand.Int())
-			w.lastStructLabel = functionLabel
-
-			functionCtx := NewBlockContext()
-			// TODO general access
-			functionCtx.Functions = w.mainContext.Functions
-
-			bijectionAnnotationTypes := map[string]string{}
-
-			bijectionAnnotationTypes["IntNumber"] = "int"
-			bijectionAnnotationTypes["FloatNumber"] = "float"
-			bijectionAnnotationTypes["Boolean"] = "boolean"
-			bijectionAnnotationTypes["String"] = "string"
-			bijectionAnnotationTypes["Nil"] = "nil"
-
-			flagCorrectAnnotations := true
-			for _, arg := range s.args {
-				_receivedArg, _ := w.stack.Pop()
-				_receivedArgType := typeof(_receivedArg)[len("*parser."):]
-
-				if arg.annotation != bijectionAnnotationTypes[_receivedArgType] {
-					err := errors.New(
-						fmt.Sprintf("invalid type of argument '%s' (expected %s, getted %s)",
-							arg.name, arg.annotation, bijectionAnnotationTypes[_receivedArgType]))
-					w.CreatePullError(err, s.Line)
-					flagCorrectAnnotations = false
-				}
-				functionCtx.Vars[arg.name] = _receivedArg
-			}
-
-			if flagCorrectAnnotations {
-
-				w.currentContext = functionCtx
-
-				s.body.Walk(w)
-				returnValue, ok := w.stack.Pop()
-
-				for idx, interrupt := range w.interruptionsPull.interruptions {
-					if strings.Contains(interrupt, functionLabel) {
-						w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
-					}
-				}
-
-				w.lastStructLabel = ""
-
-				returnAnnotation := "*parser.Nil"
-				if ok {
-					returnValue.Walk(w)
-					result, _ := w.stack.Pop()
-					returnAnnotation = typeof(result)
-					w.stack.Push(result)
-				} else {
-					w.stack.Push(&Nil{Line: line})
-				}
-
-				_retArgType := returnAnnotation[len("*parser."):]
-				if s.returnAnnotation != bijectionAnnotationTypes[_retArgType] {
-					err := errors.New(
-						fmt.Sprintf("invalid type of return value in function '%s' (expected %s, getted %s)",
-							s.name, s.returnAnnotation, bijectionAnnotationTypes[_retArgType]))
-					w.CreatePullError(err, s.Line)
-				}
-
-				w.switchMainContext()
-			}
-
-		}
+		//w.currentContext.Functions[s.name] = func(w Executor, curNode Node, argCount, line int) {
+		//
+		//	//ctxVariables := map[string]Node{}
+		//
+		//	reverseAny(s.args)
+		//
+		//	functionLabel := fmt.Sprintf("__function%d", rand.Int())
+		//	w.lastStructLabel = functionLabel
+		//
+		//	functionCtx := lib.NewContext()
+		//	// TODO general access
+		//	functionCtx.Functions = w.mainContext.Functions
+		//
+		//	bijectionAnnotationTypes := map[string]string{}
+		//
+		//	bijectionAnnotationTypes["IntNumber"] = "int"
+		//	bijectionAnnotationTypes["FloatNumber"] = "float"
+		//	bijectionAnnotationTypes["Boolean"] = "boolean"
+		//	bijectionAnnotationTypes["String"] = "string"
+		//	bijectionAnnotationTypes["Nil"] = "nil"
+		//
+		//	flagCorrectAnnotations := true
+		//	for _, arg := range s.args {
+		//		_receivedArg, _ := w.Stack.Pop()
+		//		_receivedArgType := typeof(_receivedArg)[len("*parser."):]
+		//
+		//		if arg.Annotation != bijectionAnnotationTypes[_receivedArgType] {
+		//			err := errors.New(
+		//				fmt.Sprintf("invalid type of argument '%s' (expected %s, getted %s)",
+		//					arg.Name, arg.Annotation, bijectionAnnotationTypes[_receivedArgType]))
+		//			w.CreatePullError(err, s.Line)
+		//			flagCorrectAnnotations = false
+		//		}
+		//		functionCtx.Vars[arg.Name] = _receivedArg
+		//	}
+		//
+		//	if flagCorrectAnnotations {
+		//
+		//		w.currentContext = functionCtx
+		//
+		//		s.body.Walk(w)
+		//		returnValue, ok := w.Stack.Pop()
+		//
+		//		for idx, interrupt := range w.interruptionsPull.interruptions {
+		//			if strings.Contains(interrupt, functionLabel) {
+		//				w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
+		//			}
+		//		}
+		//
+		//		w.lastStructLabel = ""
+		//
+		//		returnAnnotation := "*parser.Nil"
+		//		if ok {
+		//			returnValue.Walk(w)
+		//			result, _ := w.Stack.Pop()
+		//			returnAnnotation = typeof(result)
+		//			w.Stack.Push(result)
+		//		} else {
+		//			w.Stack.Push(&Nil{Line: line})
+		//		}
+		//
+		//		_retArgType := returnAnnotation[len("*parser."):]
+		//		if s.returnAnnotation != bijectionAnnotationTypes[_retArgType] {
+		//			err := errors.New(
+		//				fmt.Sprintf("invalid type of return value in function '%s' (expected %s, getted %s)",
+		//					s.name, s.returnAnnotation, bijectionAnnotationTypes[_retArgType]))
+		//			w.CreatePullError(err, s.Line)
+		//		}
+		//
+		//		w.switchMainContext()
+		//	}
+		//
+		//}
 
 		return false
 
@@ -941,7 +983,7 @@ func (w Executor) EnterNode(n Node) bool {
 	case *IfNode:
 
 		s.node.Walk(w)
-		condition, ok := w.stack.Pop()
+		condition, ok := w.Stack.Pop()
 
 		if condition == nil || !ok {
 			err := errors.New("condition expected")
@@ -974,7 +1016,7 @@ func (w Executor) EnterNode(n Node) bool {
 	case *ForNode:
 
 		s.start.Walk(w)
-		startNode, ok := w.stack.Pop()
+		startNode, ok := w.Stack.Pop()
 
 		if startNode == nil || !ok {
 			err := errors.New("loop start expected")
@@ -985,7 +1027,7 @@ func (w Executor) EnterNode(n Node) bool {
 		w.currentContext.Vars[s.iterVar] = startNode
 
 		s.stop.Walk(w)
-		stopNode, ok := w.stack.Pop()
+		stopNode, ok := w.Stack.Pop()
 
 		if stopNode == nil || !ok {
 			err := errors.New("loop stop expected")
@@ -994,7 +1036,7 @@ func (w Executor) EnterNode(n Node) bool {
 		}
 
 		s.step.Walk(w)
-		stepNode, ok := w.stack.Pop()
+		stepNode, ok := w.Stack.Pop()
 
 		if stepNode == nil || !ok {
 			err := errors.New("loop step expected")
@@ -1020,7 +1062,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += step {
 						w.currentContext.Vars[s.iterVar] = &IntNumber{i, s.Line}
 						s.stmt.Walk(w)
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 
 						switch res.(type) {
 						case *Break:
@@ -1053,7 +1095,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
 						w.currentContext.Vars[s.iterVar] = &IntNumber{i, s.Line}
 						s.stmt.Walk(w)
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 
 						switch res.(type) {
 						case *Break:
@@ -1095,7 +1137,7 @@ func (w Executor) EnterNode(n Node) bool {
 						w.currentContext.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
 
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 
 						switch res.(type) {
 						case *Break:
@@ -1127,7 +1169,7 @@ func (w Executor) EnterNode(n Node) bool {
 						w.currentContext.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
 
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 
 						switch res.(type) {
 						case *Break:
@@ -1176,7 +1218,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := start; BoolTernary(s.strict, i <= stopCasted, i < stopCasted); i += stepCasted {
 						w.currentContext.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 
 						switch res.(type) {
 						case *Break:
@@ -1208,7 +1250,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := start; BoolTernary(s.strict, i <= stopCasted, i < stopCasted); i += step {
 						w.currentContext.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 
 						switch res.(type) {
 						case *Break:
@@ -1248,7 +1290,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += stepCasted {
 						w.currentContext.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 
 						switch res.(type) {
 						case *Break:
@@ -1280,7 +1322,7 @@ func (w Executor) EnterNode(n Node) bool {
 					for i := start; BoolTernary(s.strict, i <= stop, i < stop); i += step {
 						w.currentContext.Vars[s.iterVar] = &FloatNumber{i, s.Line}
 						s.stmt.Walk(w)
-						res, _ := w.stack.Pop()
+						res, _ := w.Stack.Pop()
 						switch res.(type) {
 						case *Break:
 							for idx, interrupt := range w.interruptionsPull.interruptions {
@@ -1325,17 +1367,17 @@ func (w Executor) EnterNode(n Node) bool {
 
 	case *Break:
 		w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions, w.lastStructLabel+"_break")
-		w.stack.Push(s)
+		w.Stack.Push(s)
 		return false
 
 	case *Continue:
 		w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions, w.lastStructLabel+"_continue")
-		w.stack.Push(s)
+		w.Stack.Push(s)
 		return false
 
 	case *While:
 		s.condition.Walk(w)
-		condition, ok := w.stack.Pop()
+		condition, ok := w.Stack.Pop()
 
 		if condition == nil || !ok {
 			err := errors.New("condition expected")
@@ -1355,7 +1397,7 @@ func (w Executor) EnterNode(n Node) bool {
 		Loop:
 			for conditionResult {
 				s.stmt.Walk(w)
-				res, _ := w.stack.Pop()
+				res, _ := w.Stack.Pop()
 
 				switch res.(type) {
 				case *Break:
@@ -1379,7 +1421,7 @@ func (w Executor) EnterNode(n Node) bool {
 				}
 
 				s.condition.Walk(w)
-				condition, _ := w.stack.Pop()
+				condition, _ := w.Stack.Pop()
 
 				switch cnd := condition.(type) {
 				case *Boolean:
@@ -1399,11 +1441,11 @@ func (w Executor) EnterNode(n Node) bool {
 
 	case *Return:
 		w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions, w.lastStructLabel+"__return")
-		w.stack.Push(s.value)
+		w.Stack.Push(s.value)
 		return false
 
 	case *Nil:
-		w.stack.Push(&Nil{s.Line})
+		w.Stack.Push(&Nil{s.Line})
 		return false
 	}
 

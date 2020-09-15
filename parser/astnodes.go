@@ -297,3 +297,36 @@ func (r *Return) Walk(v Visitor) {
 
 	v.LeaveNode(r)
 }
+
+type Array struct {
+	Elements []Node
+	Line     int
+}
+
+func (ar *Array) Walk(v Visitor) {
+	if !v.EnterNode(ar) {
+		return
+	}
+
+	for _, item := range ar.Elements {
+		item.Walk(v)
+	}
+
+	v.LeaveNode(ar)
+}
+
+type CollectionAccess struct {
+	variableName string
+	index        Node
+	Line         int
+}
+
+func (aa *CollectionAccess) Walk(v Visitor) {
+	if !v.EnterNode(aa) {
+		return
+	}
+
+	aa.index.Walk(v)
+
+	v.LeaveNode(aa)
+}

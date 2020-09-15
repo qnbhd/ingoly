@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"ingoly/errpull"
+	"ingoly/parser/tokenizer"
 )
 
 func contains(s []string, searchTerm string) bool {
@@ -14,7 +15,7 @@ func contains(s []string, searchTerm string) bool {
 	return false
 }
 
-func (ps *Parser) match(tokenType TokenType) bool {
+func (ps *Parser) match(tokenType tokenizer.TokenType) bool {
 	current := ps.get(0)
 	if tokenType != current.Type {
 		return false
@@ -23,7 +24,7 @@ func (ps *Parser) match(tokenType TokenType) bool {
 	return true
 }
 
-func (ps *Parser) consume(tokenType TokenType) (Token, error) {
+func (ps *Parser) consume(tokenType tokenizer.TokenType) (tokenizer.Token, error) {
 	current := ps.get(0)
 	err := errors.New("parsing: " + tokenType.String() + " was expected")
 
@@ -31,16 +32,16 @@ func (ps *Parser) consume(tokenType TokenType) (Token, error) {
 		line := ps.get(0).Line
 		inn := errpull.NewInnerError(err, line)
 		ps.ErrorsPull.Errors = append(ps.ErrorsPull.Errors, inn)
-		return Token{Type: NIL}, err
+		return tokenizer.Token{Type: tokenizer.NIL}, err
 	}
 	ps.pos++
 	return current, nil
 }
 
-func (ps *Parser) get(relativePosition int) Token {
+func (ps *Parser) get(relativePosition int) tokenizer.Token {
 	position := ps.pos + relativePosition
 	if position >= ps.size {
-		return Token{Type: EOF, Lexeme: ""}
+		return tokenizer.Token{Type: tokenizer.EOF, Lexeme: ""}
 	}
 	return ps.Tokens[position]
 }

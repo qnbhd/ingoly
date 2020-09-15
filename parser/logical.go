@@ -1,11 +1,13 @@
 package parser
 
+import "ingoly/parser/tokenizer"
+
 func (ps *Parser) LogicalOr() Node {
 	result := ps.LogicalAnd()
 
 	for {
 		line := ps.get(0).Line
-		if ps.match(VBARVBAR) {
+		if ps.match(tokenizer.VBARVBAR) {
 			result = &ConditionalNode{"||", result, ps.LogicalAnd(), line}
 			continue
 		}
@@ -20,7 +22,7 @@ func (ps *Parser) LogicalAnd() Node {
 
 	for {
 		line := ps.get(0).Line
-		if ps.match(AMPERAMPER) {
+		if ps.match(tokenizer.AMPERAMPER) {
 			result = &ConditionalNode{"&&", result, ps.Equality(), line}
 			continue
 		}
@@ -34,10 +36,10 @@ func (ps *Parser) Equality() Node {
 	result := ps.Conditional()
 	line := ps.get(0).Line
 
-	if ps.match(EQEQUAL) {
+	if ps.match(tokenizer.EQEQUAL) {
 		result = &ConditionalNode{"==", result, ps.Conditional(), line}
 	}
-	if ps.match(NOTEQUAL) {
+	if ps.match(tokenizer.NOTEQUAL) {
 		result = &ConditionalNode{"!=", result, ps.Conditional(), line}
 	}
 
@@ -50,27 +52,27 @@ func (ps *Parser) Conditional() Node {
 	for {
 		line := ps.get(0).Line
 
-		if ps.match(LESS) {
+		if ps.match(tokenizer.LESS) {
 			result = &ConditionalNode{"<", result, ps.Additive(), line}
 			continue
 		}
-		if ps.match(GREATER) {
+		if ps.match(tokenizer.GREATER) {
 			result = &ConditionalNode{">", result, ps.Additive(), line}
 			continue
 		}
-		if ps.match(EQEQUAL) {
+		if ps.match(tokenizer.EQEQUAL) {
 			result = &ConditionalNode{"==", result, ps.Additive(), line}
 			continue
 		}
-		if ps.match(LESSEQUAL) {
+		if ps.match(tokenizer.LESSEQUAL) {
 			result = &ConditionalNode{"<=", result, ps.Additive(), line}
 			continue
 		}
-		if ps.match(GREATEREQUAL) {
+		if ps.match(tokenizer.GREATEREQUAL) {
 			result = &ConditionalNode{">=", result, ps.Additive(), line}
 			continue
 		}
-		if ps.match(NOTEQUAL) {
+		if ps.match(tokenizer.NOTEQUAL) {
 			result = &ConditionalNode{"!=", result, ps.Additive(), line}
 			continue
 		}

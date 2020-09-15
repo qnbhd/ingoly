@@ -1,22 +1,26 @@
 package parser
 
+import (
+	"ingoly/parser/tokenizer"
+)
+
 func (ps *Parser) Node() Node {
 
-	if ps.match(IF) {
+	if ps.match(tokenizer.IF) {
 		return ps.IfElseBlock()
-	} else if ps.match(FOR) {
+	} else if ps.match(tokenizer.FOR) {
 		return ps.ForBlock()
-	} else if ps.match(WHILE) {
+	} else if ps.match(tokenizer.WHILE) {
 		return ps.While()
-	} else if ps.match(BREAK) {
+	} else if ps.match(tokenizer.BREAK) {
 		return &Break{Line: ps.get(0).Line}
-	} else if ps.match(CONTINUE) {
+	} else if ps.match(tokenizer.CONTINUE) {
 		return &Continue{Line: ps.get(0).Line}
-	} else if ps.match(DECLARE) {
+	} else if ps.match(tokenizer.DECLARE) {
 		return ps.FuncDeclaration()
-	} else if ps.match(RETURN) {
+	} else if ps.match(tokenizer.RETURN) {
 		return ps.ReturnStmt()
-	} else if ps.match(NIL) {
+	} else if ps.match(tokenizer.NIL) {
 		return &Nil{ps.get(0).Line}
 	}
 	return ps.AssignNode()
@@ -24,21 +28,21 @@ func (ps *Parser) Node() Node {
 
 func (ps *Parser) AssignNode() Node {
 
-	if ps.match(VAR) && ps.get(0).Type == NAME &&
-		ps.get(1).Type == COLONEQUAL {
+	if ps.match(tokenizer.VAR) && ps.get(0).Type == tokenizer.NAME &&
+		ps.get(1).Type == tokenizer.COLONEQUAL {
 		line := ps.get(0).Line
 		variable := ps.get(0).Lexeme
-		ps.match(NAME)
+		ps.match(tokenizer.NAME)
 
-		_, ok := ps.consume(COLONEQUAL)
+		_, ok := ps.consume(tokenizer.COLONEQUAL)
 		if ok == nil {
 			return &DeclarationNode{Variable: variable, Expression: ps.Expression(), Line: line}
 		}
-	} else if ps.get(0).Type == NAME && ps.get(1).Type == EQUAL {
+	} else if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.EQUAL {
 		line := ps.get(0).Line
 		variable := ps.get(0).Lexeme
-		ps.consume(NAME)
-		_, ok := ps.consume(EQUAL)
+		ps.consume(tokenizer.NAME)
+		_, ok := ps.consume(tokenizer.EQUAL)
 		if ok == nil {
 			return &AssignNode{Variable: variable, Expression: ps.Expression(), Line: line}
 		}
@@ -49,15 +53,15 @@ func (ps *Parser) AssignNode() Node {
 
 func (ps *Parser) Function() Node {
 	targetFuncName := ps.get(0).Lexeme
-	ps.consume(NAME)
-	ps.consume(LPAR)
+	ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.LPAR)
 
 	var args []Node
 	res := FunctionalNode{args, targetFuncName, ps.get(0).Line}
 
-	for !ps.match(RPAR) {
+	for !ps.match(tokenizer.RPAR) {
 		res.arguments = append(res.arguments, ps.Expression())
-		ps.match(COMMA)
+		ps.match(tokenizer.COMMA)
 	}
 
 	return &res
@@ -69,7 +73,7 @@ func (ps *Parser) IfElseBlock() Node {
 	condition := ps.Expression()
 	ifStmt := ps.StatementOrBlock()
 	var elseStmt Node
-	if ps.match(ELSE) {
+	if ps.match(tokenizer.ELSE) {
 		elseStmt = ps.StatementOrBlock()
 	} else {
 		elseStmt = nil
@@ -80,18 +84,18 @@ func (ps *Parser) IfElseBlock() Node {
 func (ps *Parser) ForBlock() Node {
 	line := ps.get(0).Line
 
-	iterVar, _ := ps.consume(NAME)
-	ps.consume(IN)
-	ps.consume(LSQB)
+	iterVar, _ := ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.IN)
+	ps.consume(tokenizer.LSQB)
 
 	start := ps.Expression()
-	ps.consume(SEMI)
+	ps.consume(tokenizer.SEMI)
 
 	stop := ps.Expression()
 
 	var step Node
-	if ps.get(0).Type == SEMI {
-		ps.consume(SEMI)
+	if ps.get(0).Type == tokenizer.SEMI {
+		ps.consume(tokenizer.SEMI)
 		step = ps.Expression()
 	} else {
 		step = &IntNumber{1, line}
@@ -99,11 +103,11 @@ func (ps *Parser) ForBlock() Node {
 
 	strict := false
 	switch ps.get(0).Type {
-	case RSQB:
-		ps.consume(RSQB)
+	case tokenizer.RSQB:
+		ps.consume(tokenizer.RSQB)
 		strict = true
-	case RPAR:
-		ps.consume(RPAR)
+	case tokenizer.RPAR:
+		ps.consume(tokenizer.RPAR)
 		strict = false
 	}
 
@@ -130,24 +134,24 @@ func (ps *Parser) While() Node {
 func (ps *Parser) FuncDeclaration() Node {
 	name := ps.get(0).Lexeme
 	line := ps.get(0).Line
-	ps.consume(NAME)
-	ps.consume(LPAR)
+	ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.LPAR)
 
 	var argNames []VarWithAnnotation
 
-	for !ps.match(RPAR) {
-		varName, _ := ps.consume(NAME)
-		varAnnotation, _ := ps.consume(NAME)
+	for !ps.match(tokenizer.RPAR) {
+		varName, _ := ps.consume(tokenizer.NAME)
+		varAnnotation, _ := ps.consume(tokenizer.NAME)
 		resultVar := VarWithAnnotation{varName.Lexeme, varAnnotation.Lexeme}
-		ps.match(COMMA)
+		ps.match(tokenizer.COMMA)
 		argNames = append(argNames, resultVar)
 	}
 
 	returnAnnotation := "nil"
 
-	if ps.get(0).Type == ARROW {
-		ps.consume(ARROW)
-		res, _ := ps.consume(NAME)
+	if ps.get(0).Type == tokenizer.ARROW {
+		ps.consume(tokenizer.ARROW)
+		res, _ := ps.consume(tokenizer.NAME)
 		returnAnnotation = res.Lexeme
 	}
 
@@ -165,4 +169,28 @@ func (ps *Parser) ReturnStmt() Node {
 	returnValue := ps.Expression()
 
 	return &Return{returnValue, ps.get(0).Line}
+}
+
+func (ps *Parser) Array() Node {
+	res, _ := ps.consume(tokenizer.LSQB)
+	line := res.Line
+	var elements []Node
+
+	for !ps.match(tokenizer.RSQB) {
+		elements = append(elements, ps.Expression())
+		ps.match(tokenizer.COMMA)
+	}
+
+	return &Array{Elements: elements, Line: line}
+
+}
+
+func (ps *Parser) ArrayElement() Node {
+	res, _ := ps.consume(tokenizer.NAME)
+	varName := res.Lexeme
+	ps.consume(tokenizer.LSQB)
+	idx := ps.Expression()
+	ps.consume(tokenizer.RSQB)
+
+	return &CollectionAccess{variableName: varName, index: idx, Line: res.Line}
 }

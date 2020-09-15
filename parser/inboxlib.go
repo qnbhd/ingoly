@@ -18,61 +18,49 @@ func reverseAny(s interface{}) {
 func __InBoxPrint(w Executor, curNode Node, argCount, line int) {
 
 	var args []Node
-	for !w.stack.IsEmpty() {
-		res, _ := w.stack.Pop()
+	i := 0
+	for i < argCount && !w.Stack.IsEmpty() {
+		res, _ := w.Stack.Pop()
 		args = append(args, res)
+		i += 1
 	}
 
 	reverseAny(args)
 
-	for _, arg := range args {
+	for idx, arg := range args {
 		switch exp := arg.(type) {
 		case *IntNumber:
-			fmt.Print(exp.value, " ")
+			fmt.Print(exp.value)
 		case *FloatNumber:
-			fmt.Print(exp.value, " ")
+			fmt.Print(exp.value)
 		case *Boolean:
-			fmt.Print(exp.value, " ")
+			fmt.Print(exp.value)
 		case *String:
-			fmt.Print(exp.value, " ")
+			fmt.Print(exp.value)
 		case *Nil:
-			fmt.Print("nil", " ")
+			fmt.Print("nil")
+		case *Array:
+			fmt.Print("[")
+			for _, item := range exp.Elements {
+				item.Walk(w)
+			}
+			__InBoxPrint(w, exp, len(exp.Elements), line)
+			fmt.Print("]")
 		}
-
+		if idx != len(args)-1 {
+			fmt.Print(", ")
+		}
 	}
 }
 
 func __InBoxPrintln(w Executor, curNode Node, argCount, line int) {
-
-	var args []Node
-	for !w.stack.IsEmpty() {
-		res, _ := w.stack.Pop()
-		args = append(args, res)
-	}
-
-	reverseAny(args)
-
-	for _, arg := range args {
-		switch exp := arg.(type) {
-		case *IntNumber:
-			fmt.Print(exp.value, " ")
-		case *FloatNumber:
-			fmt.Print(exp.value, " ")
-		case *Boolean:
-			fmt.Print(exp.value, " ")
-		case *String:
-			fmt.Print(exp.value, " ")
-		case *Nil:
-			fmt.Print("nil", " ")
-		}
-	}
-
-	fmt.Println()
+	__InBoxPrint(w, curNode, argCount, line)
+	fmt.Println(" ")
 }
 
 func __InBoxType(w Executor, curNode Node, line int) {
 
-	arg, _ := w.stack.Pop()
+	arg, _ := w.Stack.Pop()
 
 	var result string
 	switch arg.(type) {
@@ -86,7 +74,7 @@ func __InBoxType(w Executor, curNode Node, line int) {
 		result = "string"
 	}
 
-	w.stack.Push(&String{result, line})
+	w.Stack.Push(&String{result, line})
 }
 
 //
@@ -127,7 +115,7 @@ func __InBoxType(w Executor, curNode Node, line int) {
 
 func __InBoxSin(w Executor, curNode Node, argCount, line int) {
 
-	opNode, _ := w.stack.Pop()
+	opNode, _ := w.Stack.Pop()
 
 	var target float64
 	switch op := opNode.(type) {
@@ -145,5 +133,5 @@ func __InBoxSin(w Executor, curNode Node, argCount, line int) {
 		return
 	}
 
-	w.stack.Push(&FloatNumber{value: math.Sin(target), Line: line})
+	w.Stack.Push(&FloatNumber{value: math.Sin(target), Line: line})
 }

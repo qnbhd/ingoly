@@ -169,7 +169,7 @@ func (w Printer) EnterNode(n Node) bool {
 		if len(s.args) != 0 {
 			color.HiGreen("   !--> Arg Names: ")
 			for _, item := range s.args {
-				color.Blue("      +- %s [annotation: %s]", item.name, item.annotation)
+				color.Blue("      +- %s [annotation: %s]", item.Name, item.Annotation)
 			}
 		}
 		w.IndentLevel++
@@ -198,6 +198,27 @@ func (w Printer) EnterNode(n Node) bool {
 
 	case *Nil:
 		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Nil Value"))
+		return false
+
+	case *Array:
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Array"))
+		w.IndentLevel++
+		for _, item := range s.Elements {
+			item.Walk(w)
+		}
+		w.IndentLevel--
+		return false
+
+	case *CollectionAccess:
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Array Access to '%s' array", s.variableName))
+
+		w.IndentLevel++
+		w.PrintIndent(0)
+		color.HiGreen("+- Index")
+		w.IndentLevel++
+		s.index.Walk(w)
+		w.IndentLevel -= 2
+
 		return false
 	}
 
