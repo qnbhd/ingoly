@@ -20,6 +20,7 @@ func NewIndexer() *Indexer {
 	newCtx.Functions["float"] = __TypeCastingFloat
 	newCtx.Functions["boolean"] = __TypeCastingBoolean
 	newCtx.Functions["string"] = __TypeCastingString
+	newCtx.Functions["len"] = __InBoxLen
 
 	return &Indexer{Ctx: newCtx}
 }

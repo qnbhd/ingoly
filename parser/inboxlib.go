@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"unicode/utf8"
 )
 
 func reverseAny(s interface{}) {
@@ -77,42 +78,6 @@ func __InBoxType(w Executor, curNode Node, line int) {
 	w.Stack.Push(&String{result, line})
 }
 
-//
-//func __InBoxMathFunc(w Executor, curNode, opNode Node, line int, funcName string) {
-//
-//	var target float64
-//	switch op := opNode.(type) {
-//	case *IntNumber:
-//		target = float64(op.value)
-//	case *FloatNumber:
-//		target = op.value
-//	case *Boolean:
-//		err := errors.New("invalid argument for func")
-//		w.CreatePullError(err, line)
-//		return
-//	case *String:
-//		err := errors.New("invalid argument for func")
-//		w.CreatePullError(err, line)
-//		return
-//	}
-//
-//	var functor func(float64) float64
-//	switch funcName {
-//	case "sin":
-//		functor = math.Sin
-//	case "cos":
-//		functor = math.Cos
-//	case "tan":
-//		functor = math.Tan
-//	case "sqrt":
-//		functor = math.Sqrt
-//	default:
-//		functor = __DummyF64
-//	}
-//
-//	w.stack.Push(&FloatNumber{functor(target), line})
-//}
-
 func __InBoxSin(w Executor, curNode Node, argCount, line int) {
 
 	opNode, _ := w.Stack.Pop()
@@ -134,4 +99,33 @@ func __InBoxSin(w Executor, curNode Node, argCount, line int) {
 	}
 
 	w.Stack.Push(&FloatNumber{value: math.Sin(target), Line: line})
+}
+
+func __InBoxLen(w Executor, curNode Node, argCount, line int) {
+
+	opCollection, ok := w.Stack.Pop()
+
+	if !ok {
+		err := errors.New("argument error for len operator")
+		w.CreatePullError(err, line)
+		return
+	}
+
+	var result int
+	switch typedCollection := opCollection.(type) {
+	case *Array:
+		result = len(typedCollection.Elements)
+	case *String:
+		result = utf8.RuneCountInString(typedCollection.value)
+	default:
+		err := errors.New("invalid argument (must be collection) for len operator")
+		w.CreatePullError(err, line)
+		return
+	}
+
+	w.Stack.Push(&IntNumber{
+		value: result,
+		Line:  line,
+	})
+
 }

@@ -32,6 +32,14 @@ func (ps *Parser) atomic() Node {
 	if ps.get(0).Type == tokenizer.LSQB {
 		return ps.Array()
 	}
+	if ps.get(0).Type == tokenizer.VBAR {
+		line := ps.get(0).Line
+		ps.consume(tokenizer.VBAR)
+		collection := ps.Expression()
+		ps.consume(tokenizer.VBAR)
+		arg := []Node{collection}
+		return &FunctionalNode{arguments: arg, operator: "len", Line: line}
+	}
 	if ps.match(tokenizer.TRUE) {
 		return &Boolean{value: true}
 	}
