@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 func __TypeCastingInt(w Executor, curNode Node, argCount, line int) {
@@ -11,9 +12,9 @@ func __TypeCastingInt(w Executor, curNode Node, argCount, line int) {
 
 	switch s := opNode.(type) {
 	case *IntNumber:
-		w.Stack.Push(&IntNumber{s.value, s.Line})
+		w.Stack.Push(&IntNumber{s.Value, s.Line})
 	case *FloatNumber:
-		w.Stack.Push(&IntNumber{int(s.value), s.Line})
+		w.Stack.Push(&IntNumber{int(s.Value), s.Line})
 	case *Boolean:
 		var result int
 		switch s.value {
@@ -24,8 +25,13 @@ func __TypeCastingInt(w Executor, curNode Node, argCount, line int) {
 		}
 		w.Stack.Push(&IntNumber{result, s.Line})
 	case *String:
-		err := errors.New("invalid type casting from string to int")
-		w.CreatePullError(err, line)
+		number, gerr := strconv.Atoi(string(s.value))
+		if gerr != nil {
+			err := errors.New("invalid type casting from string to int")
+			w.CreatePullError(err, line)
+			return
+		}
+		w.Stack.Push(&IntNumber{number, s.Line})
 	}
 
 }
@@ -36,9 +42,9 @@ func __TypeCastingFloat(w Executor, curNode Node, argCount, line int) {
 
 	switch s := opNode.(type) {
 	case *IntNumber:
-		w.Stack.Push(&FloatNumber{float64(s.value), s.Line})
+		w.Stack.Push(&FloatNumber{float64(s.Value), s.Line})
 	case *FloatNumber:
-		w.Stack.Push(&FloatNumber{s.value, s.Line})
+		w.Stack.Push(&FloatNumber{s.Value, s.Line})
 	case *Boolean:
 		var result float64
 		switch s.value {
@@ -59,10 +65,10 @@ func __TypeCastingBoolean(w Executor, curNode Node, argCount, line int) {
 
 	switch s := opNode.(type) {
 	case *IntNumber:
-		result := s.value != 0
+		result := s.Value != 0
 		w.Stack.Push(&Boolean{result, s.Line})
 	case *FloatNumber:
-		result := s.value != 0
+		result := s.Value != 0
 		w.Stack.Push(&Boolean{result, s.Line})
 	case *Boolean:
 		w.Stack.Push(&Boolean{s.value, s.Line})
@@ -78,14 +84,14 @@ func __TypeCastingString(w Executor, curNode Node, argCount, line int) {
 
 	switch s := opNode.(type) {
 	case *IntNumber:
-		result := fmt.Sprintf("%d", s.value)
-		w.Stack.Push(&String{result, s.Line})
+		result := fmt.Sprintf("%d", s.Value)
+		w.Stack.Push(&String{[]rune(result), s.Line})
 	case *FloatNumber:
-		result := fmt.Sprintf("%f", s.value)
-		w.Stack.Push(&String{result, s.Line})
+		result := fmt.Sprintf("%f", s.Value)
+		w.Stack.Push(&String{[]rune(result), s.Line})
 	case *Boolean:
 		result := fmt.Sprintf("%t", s.value)
-		w.Stack.Push(&String{result, s.Line})
+		w.Stack.Push(&String{[]rune(result), s.Line})
 	case *String:
 		w.Stack.Push(&String{s.value, s.Line})
 	}

@@ -1,0 +1,29 @@
+// math package
+
+declare sin(x float) -> float {
+    return __builtin__sin(x)
+}
+
+declare cos(x float) -> float {
+    return __builtin__cos(x)
+}
+
+declare tan(x float) -> float {
+    return sin(x) / cos(x)
+}
+
+declare cot(x float) -> float {
+    return 1/tan(x)
+}
+
+declare sqrt(x float) -> float {
+    return __builtin__sqrt(x)
+}
+
+declare abs(x float) -> float {
+    return __builtin__abs(x)
+}
+
+declare exp(x float) -> float {
+    return __builtin__exp(x)
+}

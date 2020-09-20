@@ -13,8 +13,14 @@ type Indexer struct {
 
 func NewIndexer() *Indexer {
 	newCtx := NewContext()
-	newCtx.Functions["sin"] = __InBoxSin
+	newCtx.Functions["__builtin__sin"] = __InBoxSin
+	newCtx.Functions["__builtin__cos"] = __InBoxCos
+	newCtx.Functions["__builtin__sqrt"] = __InBoxSqrt
+	newCtx.Functions["__builtin__abs"] = __InBoxAbs
+	newCtx.Functions["__builtin__exp"] = __InBoxExp
+
 	newCtx.Functions["print"] = __InBoxPrint
+	newCtx.Functions["input"] = __InBoxInput
 	newCtx.Functions["println"] = __InBoxPrintln
 	newCtx.Functions["int"] = __TypeCastingInt
 	newCtx.Functions["float"] = __TypeCastingFloat
@@ -55,12 +61,17 @@ func (w Indexer) EnterNode(n Node) bool {
 				_receivedArg, _ := w.Stack.Pop()
 				_receivedArgType := typeof(_receivedArg)[len("*parser."):]
 
-				if arg.Annotation != bijectionAnnotationTypes[_receivedArgType] {
-					err := errors.New(
-						fmt.Sprintf("invalid type of argument '%s' (expected %s, getted %s)",
-							arg.Name, arg.Annotation, bijectionAnnotationTypes[_receivedArgType]))
-					w.CreatePullError(err, curNode.Line)
-					flagCorrectAnnotations = false
+				needed := arg.Annotation
+				getted := bijectionAnnotationTypes[_receivedArgType]
+
+				if needed != getted {
+					if !(needed == "int" && getted == "float" || needed == "float" && getted == "int") {
+						err := errors.New(
+							fmt.Sprintf("invalid type of argument '%s' (expected %s, getted %s)",
+								arg.Name, needed, getted))
+						w.CreatePullError(err, curNode.Line)
+						flagCorrectAnnotations = false
+					}
 				}
 				functionCtx.Vars[arg.Name] = _receivedArg
 			}

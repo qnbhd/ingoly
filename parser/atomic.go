@@ -13,13 +13,13 @@ func (ps *Parser) atomic() Node {
 	if ps.match(tokenizer.NUMBER) {
 		if strings.Index(current.Lexeme, ".") != -1 {
 			value, _ := strconv.ParseFloat(current.Lexeme, 64)
-			return &FloatNumber{value: value, Line: line}
+			return &FloatNumber{Value: value, Line: line}
 		}
 		value, _ := strconv.Atoi(current.Lexeme)
-		return &IntNumber{value: value, Line: line}
+		return &IntNumber{Value: value, Line: line}
 	}
 	if ps.match(tokenizer.STRING) {
-		return &String{value: current.Lexeme, Line: line}
+		return &String{value: []rune(current.Lexeme), Line: line}
 	}
 	if ps.match(tokenizer.LPAR) {
 		result := ps.Expression()
@@ -52,7 +52,7 @@ func (ps *Parser) atomic() Node {
 		return ps.Function()
 	}
 	if ps.match(tokenizer.NAME) {
-		return &ScopeVar{name: current.Lexeme, Line: line}
+		return &ScopeVar{Name: current.Lexeme, Line: line}
 	}
 
 	panic("WTF")

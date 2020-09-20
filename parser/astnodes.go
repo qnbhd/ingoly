@@ -86,7 +86,7 @@ func (un *UnaryNode) Walk(v Visitor) {
 /* Name Node */
 
 type ScopeVar struct {
-	name string
+	Name string
 	Line int
 }
 

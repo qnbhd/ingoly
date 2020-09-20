@@ -7,7 +7,7 @@ import (
 	"unicode"
 )
 
-const PIX = "+-*(){}[]:;/=<>!&|"
+const PIX = "+-*(){}[]:;/=<>!&|."
 
 type Reserved struct {
 	Operators map[string]TokenType
@@ -83,6 +83,7 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["declare"] = DECLARE
 	ops.Operators["return"] = RETURN
 	ops.Operators["nil"] = NIL
+	ops.Operators["require"] = REQUIRE
 
 	return &ops
 }
@@ -97,7 +98,7 @@ type Tokenizer struct {
 	ErrorsPull       *errpull.ErrorsPull
 }
 
-func New(input string) *Tokenizer {
+func NewLexer(input string) *Tokenizer {
 	return &Tokenizer{Input: []rune(input), tokens: []Token{},
 		reservedOps:      GetReservedOperators(),
 		reservedKeywords: GetReservedKeywords(),
@@ -268,6 +269,27 @@ func (lx *Tokenizer) tokenizeText() error {
 	return nil
 }
 
+func (lx *Tokenizer) tokenizeRequire() error {
+	lx.next()
+
+	var builder strings.Builder
+	current := lx.peek(0)
+
+	for {
+		if current == '\n' || current == '\x00' {
+			break
+		}
+		builder.WriteRune(current)
+		current = lx.next()
+	}
+
+	lx.next()
+	lx.currentLine++
+
+	lx.addToken(REQUIRESTRING, builder.String(), lx.currentLine-1)
+	return nil
+}
+
 func (lx *Tokenizer) Tokenize() ([]Token, *errpull.ErrorsPull) {
 	for lx.pos < lx.Length() {
 		current := lx.peek(0)
@@ -279,10 +301,12 @@ func (lx *Tokenizer) Tokenize() ([]Token, *errpull.ErrorsPull) {
 		var err error
 		if unicode.IsDigit(current) {
 			err = lx.tokenizeNumber()
-		} else if unicode.IsLetter(current) {
+		} else if unicode.IsLetter(current) || current == '_' {
 			err = lx.tokenizeWord()
 		} else if current == '"' {
 			err = lx.tokenizeText()
+		} else if current == '@' && unicode.IsLetter(lx.peek(1)) {
+			err = lx.tokenizeRequire()
 		} else if strings.Index(PIX, string(current)) != -1 {
 			err = lx.tokenizeOperator()
 		} else {

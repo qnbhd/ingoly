@@ -66,15 +66,15 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *ScopeVar:
-		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Using Variable (Value) ['%s']", s.name))
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Using Variable (Value) ['%s']", s.Name))
 		return false
 
 	case *IntNumber:
-		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Integer Number (Number) Value: '%d'", s.value))
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Integer Number (Number) Value: '%d'", s.Value))
 		return false
 
 	case *FloatNumber:
-		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Float Number (Number) Value: '%3.3f'", s.value))
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("Float Number (Number) Value: '%3.3f'", s.Value))
 		return false
 
 	case *String:

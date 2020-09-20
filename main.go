@@ -23,8 +23,11 @@ func main() {
 		return
 	}
 
-	lx := tokenizer.New(string(data))
+	lx := tokenizer.NewLexer(string(data))
 	result, lexErrorPull := lx.Tokenize()
+
+	rq := tokenizer.NewRequirer()
+	result, _ = rq.Require(result)
 
 	if !lexErrorPull.IsEmpty() {
 		lexErrorPull.Print()

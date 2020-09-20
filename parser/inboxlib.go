@@ -1,11 +1,13 @@
 package parser
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"reflect"
-	"unicode/utf8"
+	"strings"
 )
 
 func reverseAny(s interface{}) {
@@ -31,9 +33,9 @@ func __InBoxPrint(w Executor, curNode Node, argCount, line int) {
 	for idx, arg := range args {
 		switch exp := arg.(type) {
 		case *IntNumber:
-			fmt.Print(exp.value)
+			fmt.Print(exp.Value)
 		case *FloatNumber:
-			fmt.Print(exp.value)
+			fmt.Print(exp.Value)
 		case *Boolean:
 			fmt.Print(exp.value)
 		case *String:
@@ -49,7 +51,7 @@ func __InBoxPrint(w Executor, curNode Node, argCount, line int) {
 			fmt.Print("]")
 		}
 		if idx != len(args)-1 {
-			fmt.Print(", ")
+			fmt.Print(" ")
 		}
 	}
 }
@@ -75,19 +77,19 @@ func __InBoxType(w Executor, curNode Node, line int) {
 		result = "string"
 	}
 
-	w.Stack.Push(&String{result, line})
+	w.Stack.Push(&String{[]rune(result), line})
 }
 
-func __InBoxSin(w Executor, curNode Node, argCount, line int) {
+func __InBoxMathFunc(w Executor, curNode Node, argCount, line int, functor func(x float64) float64) {
 
 	opNode, _ := w.Stack.Pop()
 
 	var target float64
 	switch op := opNode.(type) {
 	case *IntNumber:
-		target = float64(op.value)
+		target = float64(op.Value)
 	case *FloatNumber:
-		target = op.value
+		target = op.Value
 	case *Boolean:
 		err := errors.New("invalid argument for func")
 		w.CreatePullError(err, line)
@@ -98,7 +100,23 @@ func __InBoxSin(w Executor, curNode Node, argCount, line int) {
 		return
 	}
 
-	w.Stack.Push(&FloatNumber{value: math.Sin(target), Line: line})
+	w.Stack.Push(&FloatNumber{Value: functor(target), Line: line})
+}
+
+func __InBoxSin(w Executor, curNode Node, argCount, line int) {
+	__InBoxMathFunc(w, curNode, argCount, line, math.Sin)
+}
+func __InBoxCos(w Executor, curNode Node, argCount, line int) {
+	__InBoxMathFunc(w, curNode, argCount, line, math.Cos)
+}
+func __InBoxSqrt(w Executor, curNode Node, argCount, line int) {
+	__InBoxMathFunc(w, curNode, argCount, line, math.Sqrt)
+}
+func __InBoxAbs(w Executor, curNode Node, argCount, line int) {
+	__InBoxMathFunc(w, curNode, argCount, line, math.Abs)
+}
+func __InBoxExp(w Executor, curNode Node, argCount, line int) {
+	__InBoxMathFunc(w, curNode, argCount, line, math.Exp)
 }
 
 func __InBoxLen(w Executor, curNode Node, argCount, line int) {
@@ -116,7 +134,7 @@ func __InBoxLen(w Executor, curNode Node, argCount, line int) {
 	case *Array:
 		result = len(typedCollection.Elements)
 	case *String:
-		result = utf8.RuneCountInString(typedCollection.value)
+		result = len(typedCollection.value)
 	default:
 		err := errors.New("invalid argument (must be collection) for len operator")
 		w.CreatePullError(err, line)
@@ -124,7 +142,20 @@ func __InBoxLen(w Executor, curNode Node, argCount, line int) {
 	}
 
 	w.Stack.Push(&IntNumber{
-		value: result,
+		Value: result,
+		Line:  line,
+	})
+
+}
+
+func __InBoxInput(w Executor, curNode Node, argCount, line int) {
+
+	reader := bufio.NewReader(os.Stdin)
+	gettedString, _ := reader.ReadString('\n')
+	gettedString = strings.Trim(gettedString, "\n")
+
+	w.Stack.Push(&String{
+		value: []rune(gettedString),
 		Line:  line,
 	})
 

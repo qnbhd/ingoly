@@ -1,7 +1,7 @@
 package parser
 
 type IntNumber struct {
-	value int
+	Value int
 	Line  int
 }
 
@@ -13,7 +13,7 @@ func (in *IntNumber) Walk(v Visitor) {
 }
 
 type FloatNumber struct {
-	value float64
+	Value float64
 	Line  int
 }
 
@@ -37,7 +37,7 @@ func (bn *Boolean) Walk(v Visitor) {
 }
 
 type String struct {
-	value string
+	value []rune
 	Line  int
 }
 
