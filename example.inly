@@ -1,3 +1,7 @@
 require @builtins.math
 
-println(abs(-1))
+declare sin2x(x float) -> float {
+    return sin(2*x)
+}
+
+println(sin2x(0.5))

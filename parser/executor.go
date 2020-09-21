@@ -708,7 +708,9 @@ func (w Executor) EnterNode(n Node) bool {
 			switch idx := index.(type) {
 			case *IntNumber:
 				if idx.Value < len(collection.Elements) {
-					w.Stack.Push(collection.Elements[idx.Value])
+					collection.Elements[idx.Value].Walk(w)
+					simplifyed, _ := w.Stack.Pop()
+					w.Stack.Push(simplifyed)
 				} else {
 					err := errors.New(
 						fmt.Sprintf("index out of range for array access to '%s' [%d] with length %d",
@@ -969,9 +971,22 @@ func (w Executor) EnterNode(n Node) bool {
 		functor, ok := w.currentContext.Functions[s.operator]
 
 		if !ok {
-			err := errors.New("undeclared function")
-			w.CreatePullError(err, s.Line)
-			return false
+			switch s.operator {
+			case "__builtin__sin":
+				functor = __InBoxSin
+			case "__builtin__cos":
+				functor = __InBoxCos
+			case "__builtin__sqrt":
+				functor = __InBoxSqrt
+			case "__builtin__abs":
+				functor = __InBoxAbs
+			case "__builtin__exp":
+				functor = __InBoxExp
+			default:
+				err := errors.New("undeclared function")
+				w.CreatePullError(err, s.Line)
+				return false
+			}
 		}
 
 		functor(w, s, len(s.arguments), s.Line)
@@ -1447,6 +1462,21 @@ func (w Executor) EnterNode(n Node) bool {
 	case *Nil:
 		w.Stack.Push(&Nil{s.Line})
 		return false
+
+	case *ClassAccess:
+
+		getted := w.mainContext.Vars[s.structName]
+
+		switch st := getted.(type) {
+		case *ClassScope:
+			w.Stack.Push(st.fields[s.structField])
+		default:
+			err := errors.New("invalid struct to access")
+			w.CreatePullError(err, s.Line)
+		}
+
+		return false
+
 	}
 
 	return true

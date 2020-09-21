@@ -26,6 +26,18 @@ func (ps *Parser) atomic() Node {
 		ps.consume(tokenizer.RPAR)
 		return result
 	}
+	if ps.get(0).Type == tokenizer.STRUCT {
+		return ps.ClassDeclaring()
+	}
+	if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.DOT &&
+		ps.get(2).Type == tokenizer.NAME && ps.get(3).Type == tokenizer.LPAR {
+		return ps.ClassMethod()
+	}
+	if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.DOT &&
+		ps.get(2).Type == tokenizer.NAME && ps.get(3).Type != tokenizer.LPAR {
+		return ps.ClassAccess()
+	}
+
 	if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.LSQB {
 		return ps.ArrayElement()
 	}

@@ -330,3 +330,48 @@ func (aa *CollectionAccess) Walk(v Visitor) {
 
 	v.LeaveNode(aa)
 }
+
+type Class struct {
+	structName string
+	fields     []VarWithAnnotation
+	Line       int
+}
+
+func (ss *Class) Walk(v Visitor) {
+	if !v.EnterNode(ss) {
+		return
+	}
+
+	v.LeaveNode(ss)
+}
+
+type ClassScope struct {
+	fields map[string]Node
+	Line   int
+}
+
+func (ss *ClassScope) Walk(v Visitor) {
+	if !v.EnterNode(ss) {
+		return
+	}
+
+	for _, item := range ss.fields {
+		item.Walk(v)
+	}
+
+	v.LeaveNode(ss)
+}
+
+type ClassAccess struct {
+	structName  string
+	structField string
+	Line        int
+}
+
+func (ss *ClassAccess) Walk(v Visitor) {
+	if !v.EnterNode(ss) {
+		return
+	}
+
+	v.LeaveNode(ss)
+}

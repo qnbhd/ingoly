@@ -84,6 +84,7 @@ func GetReservedKeywords() *Reserved {
 	ops.Operators["return"] = RETURN
 	ops.Operators["nil"] = NIL
 	ops.Operators["require"] = REQUIRE
+	ops.Operators["struct"] = STRUCT
 
 	return &ops
 }

@@ -11,13 +11,18 @@ type Indexer struct {
 	Ctx *Context
 }
 
+var (
+	bijectionAnnotationTypes = map[string]string{
+		"IntNumber":   "int",
+		"FloatNumber": "float",
+		"Boolean":     "boolean",
+		"String":      "string",
+		"Nil":         "nil",
+	}
+)
+
 func NewIndexer() *Indexer {
 	newCtx := NewContext()
-	newCtx.Functions["__builtin__sin"] = __InBoxSin
-	newCtx.Functions["__builtin__cos"] = __InBoxCos
-	newCtx.Functions["__builtin__sqrt"] = __InBoxSqrt
-	newCtx.Functions["__builtin__abs"] = __InBoxAbs
-	newCtx.Functions["__builtin__exp"] = __InBoxExp
 
 	newCtx.Functions["print"] = __InBoxPrint
 	newCtx.Functions["input"] = __InBoxInput
@@ -47,14 +52,6 @@ func (w Indexer) EnterNode(n Node) bool {
 			functionCtx := NewContext()
 			// TODO general access
 			functionCtx.Functions = w.mainContext.Functions
-
-			bijectionAnnotationTypes := map[string]string{}
-
-			bijectionAnnotationTypes["IntNumber"] = "int"
-			bijectionAnnotationTypes["FloatNumber"] = "float"
-			bijectionAnnotationTypes["Boolean"] = "boolean"
-			bijectionAnnotationTypes["String"] = "string"
-			bijectionAnnotationTypes["Nil"] = "nil"
 
 			flagCorrectAnnotations := true
 			for _, arg := range curNode.args {
@@ -113,6 +110,48 @@ func (w Indexer) EnterNode(n Node) bool {
 			}
 
 		}
+	case *Class:
+		w.Ctx.Structs[curNode.structName] = curNode.fields
+		w.Ctx.Functions[curNode.structName] = func(w Executor, opNode Node, argCount, line int) {
+
+			var Fields []VarWithAnnotation
+			for _, item := range curNode.fields {
+				Fields = append(Fields, item)
+			}
+
+			reverseAny(Fields)
+
+			newStruct := map[string]Node{}
+
+			for _, arg := range Fields {
+				_receivedArg, _ := w.Stack.Pop()
+				_receivedArgType := typeof(_receivedArg)[len("*parser."):]
+
+				needed := arg.Annotation
+				getted := bijectionAnnotationTypes[_receivedArgType]
+
+				if needed != getted {
+					if !(needed == "int" && getted == "float" || needed == "float" && getted == "int") {
+						err := errors.New(
+							fmt.Sprintf("invalid type of argument '%s' (expected %s, getted %s)",
+								arg.Name, needed, getted))
+						w.CreatePullError(err, curNode.Line)
+						//flagCorrectAnnotations = false
+						return
+					}
+				}
+				_receivedArg.Walk(w)
+				simplyfied, _ := w.Stack.Pop()
+				newStruct[arg.Name] = simplyfied
+			}
+
+			//w.mainContext.Vars[curNode.structName] = &ClassScope{newStruct, line}
+
+			w.Stack.Push(&ClassScope{newStruct, line})
+
+		}
+
+		return false
 	}
 
 	return true

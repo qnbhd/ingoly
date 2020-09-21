@@ -194,3 +194,41 @@ func (ps *Parser) ArrayElement() Node {
 
 	return &CollectionAccess{variableName: varName, index: idx, Line: res.Line}
 }
+
+func (ps *Parser) ClassDeclaring() Node {
+	ps.consume(tokenizer.STRUCT)
+	name, _ := ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.LBRACE)
+
+	var fields []VarWithAnnotation
+	for !ps.match(tokenizer.RBRACE) {
+		varName, _ := ps.consume(tokenizer.NAME)
+
+		varAnnotation, _ := ps.consume(tokenizer.NAME)
+		resultVar := VarWithAnnotation{varName.Lexeme, varAnnotation.Lexeme}
+		fields = append(fields, resultVar)
+	}
+
+	return &Class{
+		structName: name.Lexeme,
+		fields:     fields,
+		Line:       ps.get(0).Line,
+	}
+
+}
+
+func (ps *Parser) ClassAccess() Node {
+	line := ps.get(0).Line
+	structName, _ := ps.consume(tokenizer.NAME)
+	_, _ = ps.consume(tokenizer.DOT)
+	structField, _ := ps.consume(tokenizer.NAME)
+	return &ClassAccess{
+		structName:  structName.Lexeme,
+		structField: structField.Lexeme,
+		Line:        line,
+	}
+}
+
+func (ps *Parser) ClassMethod() Node {
+	return &Nil{}
+}

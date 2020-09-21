@@ -39,9 +39,25 @@ func __InBoxPrint(w Executor, curNode Node, argCount, line int) {
 		case *Boolean:
 			fmt.Print(exp.value)
 		case *String:
-			fmt.Print(exp.value)
+			fmt.Print(string(exp.value))
 		case *Nil:
 			fmt.Print("nil")
+
+		case *ClassScope:
+			fmt.Print("{")
+			id := 0
+			expLen := len(exp.fields)
+
+			for key, item := range exp.fields {
+				fmt.Print(key, ":")
+				item.Walk(w)
+				__InBoxPrint(w, exp, 1, line)
+				if id != expLen-1 {
+					fmt.Print(" ")
+				}
+				id++
+			}
+			fmt.Print("}")
 		case *Array:
 			fmt.Print("[")
 			for _, item := range exp.Elements {

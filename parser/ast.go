@@ -45,5 +45,12 @@ func (ast *Ast) Execute(indexedContext *Context) *errpull.ErrorsPull {
 	}
 
 	p.ErrorsPull.Errors = filteredPull
+
+	//fmt.Println("**********")
+	//fmt.Println(p.mainContext.Vars)
+	//fmt.Println("**********")
+	//fmt.Println(p.mainContext.Vars["Point"])
+	//fmt.Println("**********")
+
 	return p.ErrorsPull
 }

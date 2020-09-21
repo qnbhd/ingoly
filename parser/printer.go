@@ -78,7 +78,7 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *String:
-		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("String (String) Value: '%s'", s.value))
+		defaultInfoPrint(color.Blue, s.Line, fmt.Sprintf("String (String) Value: '%s'", string(s.value)))
 		return false
 
 	case *Boolean:
@@ -219,6 +219,22 @@ func (w Printer) EnterNode(n Node) bool {
 		s.index.Walk(w)
 		w.IndentLevel -= 2
 
+		return false
+
+	case *Class:
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Class Declaring Declare %s", s.structName))
+
+		w.IndentLevel++
+
+		for _, item := range s.fields {
+			w.PrintIndent(0)
+			color.HiGreen("+- Field: %s [annotation: %s]", item.Name, item.Annotation)
+		}
+
+		return false
+
+	case *ClassAccess:
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Class Access to %s [field: %s]", s.structName, s.structField))
 		return false
 	}
 
