@@ -168,6 +168,9 @@ func (ps *Parser) ReturnStmt() Node {
 }
 
 func (ps *Parser) Array() Node {
+	elementsTypeAnnotation := ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.ARROW)
+
 	res := ps.consume(tokenizer.LSQB)
 	line := res.Line
 	var elements []Node
@@ -177,7 +180,7 @@ func (ps *Parser) Array() Node {
 		ps.match(tokenizer.COMMA)
 	}
 
-	return &Array{Elements: elements, Line: line}
+	return &Array{Elements: elements, elementsTypeAnnotation: elementsTypeAnnotation.Lexeme, Line: line}
 
 }
 
@@ -196,18 +199,36 @@ func (ps *Parser) ClassDeclaring() Node {
 	ps.consume(tokenizer.LBRACE)
 
 	var fields []VarWithAnnotation
-	for !ps.match(tokenizer.RBRACE) {
-		varName := ps.consume(tokenizer.NAME)
+	methods := map[string]Node{}
 
-		varAnnotation := ps.consume(tokenizer.NAME)
-		resultVar := VarWithAnnotation{varName.Lexeme, varAnnotation.Lexeme}
-		fields = append(fields, resultVar)
+	for !ps.match(tokenizer.RBRACE) {
+
+		switch {
+		case ps.lookahead(0, tokenizer.NAME):
+			varName := ps.consume(tokenizer.NAME)
+			varAnnotation := ps.consume(tokenizer.NAME)
+			resultVar := VarWithAnnotation{varName.Lexeme, varAnnotation.Lexeme}
+			fields = append(fields, resultVar)
+		case ps.lookahead(0, tokenizer.DECLARE):
+			ps.consume(tokenizer.DECLARE)
+			method := ps.FuncDeclaration()
+			switch __T := method.(type) {
+			case *FunctionDeclareNode:
+				methods[__T.name] = method
+			default:
+				panic("incorrect class method declaring")
+			}
+		default:
+			panic("incorrect entity at class context")
+		}
+
 	}
 
 	return &Class{
-		structName: name.Lexeme,
-		fields:     fields,
-		Line:       ps.get(0).Line,
+		className: name.Lexeme,
+		methods:   methods,
+		fields:    fields,
+		Line:      ps.get(0).Line,
 	}
 
 }
@@ -217,7 +238,19 @@ func (ps *Parser) ClassAccess() Node {
 	structName := ps.consume(tokenizer.NAME)
 	ps.consume(tokenizer.DOT)
 	structField := ps.consume(tokenizer.NAME)
-	return &ClassAccess{
+
+	if ps.lookahead(0, tokenizer.EQUAL) {
+		ps.consume(tokenizer.EQUAL)
+		stmt := ps.Expression()
+		return &ClassAccessLHS{
+			structName:  structName.Lexeme,
+			stmt:        stmt,
+			structField: structField.Lexeme,
+			Line:        line,
+		}
+	}
+
+	return &ClassAccessRHS{
 		structName:  structName.Lexeme,
 		structField: structField.Lexeme,
 		Line:        line,

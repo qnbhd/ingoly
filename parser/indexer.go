@@ -8,7 +8,8 @@ import (
 )
 
 type Indexer struct {
-	Ctx *Context
+	Ctx          *Context
+	currentClass string
 }
 
 var (
@@ -33,14 +34,14 @@ func NewIndexer() *Indexer {
 	newCtx.Functions["string"] = __TypeCastingString
 	newCtx.Functions["len"] = __InBoxLen
 
-	return &Indexer{Ctx: newCtx}
+	return &Indexer{Ctx: newCtx, currentClass: ""}
 }
 
 func (w Indexer) EnterNode(n Node) bool {
 
 	switch curNode := n.(type) {
 	case *FunctionDeclareNode:
-		w.Ctx.Functions[curNode.name] = func(w Executor, opNode Node, argCount, line int) {
+		functor := func(w Executor, opNode Node, argCount, line int) {
 
 			//ctxVariables := map[string]Node{}
 
@@ -130,9 +131,17 @@ func (w Indexer) EnterNode(n Node) bool {
 			}
 
 		}
+		if w.currentClass != "" {
+			w.Ctx.ClassesMethods[w.currentClass][curNode.name] = functor
+			return false
+		}
+		w.Ctx.Functions[curNode.name] = functor
+
 	case *Class:
-		w.Ctx.Structs[curNode.structName] = curNode.fields
-		w.Ctx.Functions[curNode.structName] = func(w Executor, opNode Node, argCount, line int) {
+
+		w.currentClass = curNode.className
+		w.Ctx.Classes[curNode.className] = curNode.fields
+		w.Ctx.Functions[curNode.className] = func(w Executor, opNode Node, argCount, line int) {
 
 			var Fields []VarWithAnnotation
 			for _, item := range curNode.fields {
@@ -165,12 +174,21 @@ func (w Indexer) EnterNode(n Node) bool {
 				newStruct[arg.Name] = simplified
 			}
 
-			//w.mainContext.Vars[curNode.structName] = &ClassScope{newStruct, line}
+			//w.mainContext.Vars[curNode.className] = &ClassScope{newStruct, line}
 
-			w.Stack.Push(&ClassScope{curNode.structName, newStruct, line})
+			w.Stack.Push(&ClassScope{curNode.className, newStruct, line})
 
 		}
 
+		w.Ctx.ClassesMethods[curNode.className] = make(map[string]func(w Executor, curNode Node, argCount, line int))
+
+		for _, item := range curNode.methods {
+			item.Walk(w)
+		}
+
+		w.currentClass = ""
+
+		fmt.Println(w.Ctx.ClassesMethods["People"])
 		return false
 	}
 

@@ -299,8 +299,9 @@ func (r *Return) Walk(v Visitor) {
 }
 
 type Array struct {
-	Elements []Node
-	Line     int
+	elementsTypeAnnotation string
+	Elements               []Node
+	Line                   int
 }
 
 func (ar *Array) Walk(v Visitor) {
@@ -332,9 +333,10 @@ func (aa *CollectionAccess) Walk(v Visitor) {
 }
 
 type Class struct {
-	structName string
-	fields     []VarWithAnnotation
-	Line       int
+	className string
+	fields    []VarWithAnnotation
+	methods   map[string]Node
+	Line      int
 }
 
 func (ss *Class) Walk(v Visitor) {
@@ -363,16 +365,33 @@ func (ss *ClassScope) Walk(v Visitor) {
 	v.LeaveNode(ss)
 }
 
-type ClassAccess struct {
+type ClassAccessRHS struct {
 	structName  string
 	structField string
 	Line        int
 }
 
-func (ss *ClassAccess) Walk(v Visitor) {
+func (ss *ClassAccessRHS) Walk(v Visitor) {
 	if !v.EnterNode(ss) {
 		return
 	}
+
+	v.LeaveNode(ss)
+}
+
+type ClassAccessLHS struct {
+	structName  string
+	structField string
+	stmt        Node
+	Line        int
+}
+
+func (ss *ClassAccessLHS) Walk(v Visitor) {
+	if !v.EnterNode(ss) {
+		return
+	}
+
+	ss.stmt.Walk(v)
 
 	v.LeaveNode(ss)
 }

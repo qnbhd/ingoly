@@ -682,6 +682,32 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *Array:
+
+		needed := s.elementsTypeAnnotation
+
+		for idx, item := range s.Elements {
+			item.Walk(w)
+			receivedElement, _ := w.Stack.Pop()
+			receivedElementType := typeof(receivedElement)[len("*parser."):]
+
+			getted := bijectionAnnotationTypes[receivedElementType]
+
+			if getted == "" {
+				switch __rectype := receivedElement.(type) {
+				case *ClassScope:
+					getted = __rectype.Name
+				}
+			}
+
+			if needed != getted {
+				err := errors.New(
+					fmt.Sprintf("invalid element type of collection at %d index (needed: %s, getted %s)",
+						idx, needed, getted))
+				w.CreatePullError(err, s.Line)
+				return false
+			}
+		}
+
 		w.Stack.Push(s)
 		return false
 
@@ -1463,7 +1489,7 @@ func (w Executor) EnterNode(n Node) bool {
 		w.Stack.Push(&Nil{s.Line})
 		return false
 
-	case *ClassAccess:
+	case *ClassAccessRHS:
 		getted := w.currentContext.Vars[s.structName]
 
 		switch st := getted.(type) {

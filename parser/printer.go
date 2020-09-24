@@ -166,15 +166,16 @@ func (w Printer) EnterNode(n Node) bool {
 		defaultInfoPrint(color.Green, s.Line,
 			fmt.Sprintf("Declaration Function ['%s'] (Statement) [annotation %s]", s.name, s.returnAnnotation))
 
+		w.IndentLevel++
 		if len(s.args) != 0 {
-			color.HiGreen("   !--> Arg Names: ")
+			w.PrintIndent(0)
+			color.HiGreen("!--> Arg Names: ")
 			for _, item := range s.args {
-				color.Blue("      +- %s [annotation: %s]", item.Name, item.Annotation)
+				w.PrintIndent(1)
+				color.Blue("+- %s [annotation: %s]", item.Name, item.Annotation)
 			}
 		}
-		w.IndentLevel++
 		s.body.Walk(w)
-		w.IndentLevel--
 		return false
 
 	case *While:
@@ -201,7 +202,8 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *Array:
-		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Array"))
+		defaultInfoPrint(color.Magenta, s.Line,
+			fmt.Sprintf("Array [el annotation: %s]", s.elementsTypeAnnotation))
 		w.IndentLevel++
 		for _, item := range s.Elements {
 			item.Walk(w)
@@ -222,7 +224,7 @@ func (w Printer) EnterNode(n Node) bool {
 		return false
 
 	case *Class:
-		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Class Declaring Declare %s", s.structName))
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Class Declaring Declare %s", s.className))
 
 		w.IndentLevel++
 
@@ -231,10 +233,21 @@ func (w Printer) EnterNode(n Node) bool {
 			color.HiGreen("+- Field: %s [annotation: %s]", item.Name, item.Annotation)
 		}
 
+		for _, item := range s.methods {
+			item.Walk(w)
+		}
+
 		return false
 
-	case *ClassAccess:
-		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Class Access to %s [field: %s]", s.structName, s.structField))
+	case *ClassAccessRHS:
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Class RHS Access to '%s' [field: %s]", s.structName, s.structField))
+		return false
+
+	case *ClassAccessLHS:
+		defaultInfoPrint(color.Magenta, s.Line, fmt.Sprintf("Class LHS Access to '%s' [field: %s]", s.structName, s.structField))
+
+		w.IndentLevel++
+		s.stmt.Walk(w)
 		return false
 	}
 

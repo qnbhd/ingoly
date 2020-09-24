@@ -24,7 +24,7 @@ func (ps *Parser) atomic() Node {
 		result := ps.Expression()
 		ps.consume(tokenizer.RPAR)
 		return result
-	case ps.match(tokenizer.STRUCT):
+	case ps.match(tokenizer.CLASS):
 		return ps.ClassDeclaring()
 	case ps.lookahead(0, tokenizer.NAME) && ps.lookahead(1, tokenizer.DOT) &&
 		ps.lookahead(2, tokenizer.NAME) && ps.lookahead(3, tokenizer.LPAR):
@@ -34,7 +34,8 @@ func (ps *Parser) atomic() Node {
 		return ps.ClassAccess()
 	case ps.lookahead(0, tokenizer.NAME) && ps.lookahead(1, tokenizer.LSQB):
 		return ps.ArrayElement()
-	case ps.lookahead(0, tokenizer.LSQB):
+	case ps.lookahead(0, tokenizer.NAME) && ps.lookahead(1, tokenizer.ARROW) &&
+		ps.lookahead(2, tokenizer.LSQB):
 		return ps.Array()
 	case ps.lookahead(0, tokenizer.VBAR):
 		ps.consume(tokenizer.VBAR)

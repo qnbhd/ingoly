@@ -63,7 +63,7 @@ const (
 	ARROW
 	REQUIRE
 	REQUIRESTRING
-	STRUCT
+	CLASS
 )
 
 func (tt TokenType) String() string {
@@ -75,5 +75,5 @@ func (tt TokenType) String() string {
 		"PLUSEQUAL", "MINEQUAL", "STAREQUAL", "SLASHEQUAL", "PERCENTEQUAL",
 		"AMPEREQUAL", "VBAREQUAL", "COLONEQUAL", "CIRCUMFLEXEQUAL", "IF", "ELSE", "FOR", "WHILE",
 		"VAR", "RANGE", "IN", "TRUE", "FALSE", "BREAK", "CONTINUE", "DECLARE", "RETURN", "ARROW",
-		"REQUIRE", "REQUIRESTRING", "STRUCT"}[tt]
+		"REQUIRE", "REQUIRESTRING", "CLASS"}[tt]
 }

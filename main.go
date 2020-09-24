@@ -25,7 +25,6 @@ func main() {
 
 	lx := tokenizer.NewLexer(string(data))
 	result, lexErrorPull := lx.Tokenize()
-
 	rq := tokenizer.NewRequirer()
 	result, _ = rq.Require(result)
 
