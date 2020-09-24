@@ -61,6 +61,13 @@ func (w Indexer) EnterNode(n Node) bool {
 				needed := arg.Annotation
 				getted := bijectionAnnotationTypes[_receivedArgType]
 
+				if getted == "" {
+					switch __rectype := _receivedArg.(type) {
+					case *ClassScope:
+						getted = __rectype.Name
+					}
+				}
+
 				if needed != getted {
 					if !(needed == "int" && getted == "float" || needed == "float" && getted == "int") {
 						err := errors.New(
@@ -88,18 +95,31 @@ func (w Indexer) EnterNode(n Node) bool {
 
 				w.lastStructLabel = ""
 
-				returnAnnotation := "*parser.Nil"
+				returnedValueAnnotation := "*parser.Nil"
+				_retArgType := ""
+				getted := ""
+
 				if ok {
 					returnValue.Walk(w)
 					result, _ := w.Stack.Pop()
-					returnAnnotation = typeof(result)
+					returnedValueAnnotation = typeof(result)
+
+					switch __rectype := result.(type) {
+					case *ClassScope:
+						getted = __rectype.Name
+					default:
+						_retArgType = returnedValueAnnotation[len("*parser."):]
+						getted = bijectionAnnotationTypes[_retArgType]
+					}
+
 					w.Stack.Push(result)
 				} else {
 					w.Stack.Push(&Nil{Line: line})
 				}
 
-				_retArgType := returnAnnotation[len("*parser."):]
-				if curNode.returnAnnotation != bijectionAnnotationTypes[_retArgType] {
+				needed := curNode.returnAnnotation
+
+				if needed != getted {
 					err := errors.New(
 						fmt.Sprintf("invalid type of return value in function '%s' (expected %s, getted %s)",
 							curNode.name, curNode.returnAnnotation, bijectionAnnotationTypes[_retArgType]))
@@ -141,13 +161,13 @@ func (w Indexer) EnterNode(n Node) bool {
 					}
 				}
 				_receivedArg.Walk(w)
-				simplyfied, _ := w.Stack.Pop()
-				newStruct[arg.Name] = simplyfied
+				simplified, _ := w.Stack.Pop()
+				newStruct[arg.Name] = simplified
 			}
 
 			//w.mainContext.Vars[curNode.structName] = &ClassScope{newStruct, line}
 
-			w.Stack.Push(&ClassScope{newStruct, line})
+			w.Stack.Push(&ClassScope{curNode.structName, newStruct, line})
 
 		}
 

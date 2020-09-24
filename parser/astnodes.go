@@ -346,6 +346,7 @@ func (ss *Class) Walk(v Visitor) {
 }
 
 type ClassScope struct {
+	Name   string
 	fields map[string]Node
 	Line   int
 }

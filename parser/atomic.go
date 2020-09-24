@@ -10,62 +10,47 @@ func (ps *Parser) atomic() Node {
 	current := ps.get(0)
 	line := current.Line
 
-	if ps.match(tokenizer.NUMBER) {
+	switch {
+	case ps.match(tokenizer.NUMBER):
 		if strings.Index(current.Lexeme, ".") != -1 {
 			value, _ := strconv.ParseFloat(current.Lexeme, 64)
 			return &FloatNumber{Value: value, Line: line}
 		}
 		value, _ := strconv.Atoi(current.Lexeme)
 		return &IntNumber{Value: value, Line: line}
-	}
-	if ps.match(tokenizer.STRING) {
+	case ps.match(tokenizer.STRING):
 		return &String{value: []rune(current.Lexeme), Line: line}
-	}
-	if ps.match(tokenizer.LPAR) {
+	case ps.match(tokenizer.LPAR):
 		result := ps.Expression()
 		ps.consume(tokenizer.RPAR)
 		return result
-	}
-	if ps.get(0).Type == tokenizer.STRUCT {
+	case ps.match(tokenizer.STRUCT):
 		return ps.ClassDeclaring()
-	}
-	if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.DOT &&
-		ps.get(2).Type == tokenizer.NAME && ps.get(3).Type == tokenizer.LPAR {
+	case ps.lookahead(0, tokenizer.NAME) && ps.lookahead(1, tokenizer.DOT) &&
+		ps.lookahead(2, tokenizer.NAME) && ps.lookahead(3, tokenizer.LPAR):
 		return ps.ClassMethod()
-	}
-	if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.DOT &&
-		ps.get(2).Type == tokenizer.NAME && ps.get(3).Type != tokenizer.LPAR {
+	case ps.lookahead(0, tokenizer.NAME) && ps.lookahead(1, tokenizer.DOT) &&
+		ps.lookahead(2, tokenizer.NAME):
 		return ps.ClassAccess()
-	}
-
-	if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.LSQB {
+	case ps.lookahead(0, tokenizer.NAME) && ps.lookahead(1, tokenizer.LSQB):
 		return ps.ArrayElement()
-	}
-	if ps.get(0).Type == tokenizer.LSQB {
+	case ps.lookahead(0, tokenizer.LSQB):
 		return ps.Array()
-	}
-	if ps.get(0).Type == tokenizer.VBAR {
-		line := ps.get(0).Line
+	case ps.lookahead(0, tokenizer.VBAR):
 		ps.consume(tokenizer.VBAR)
 		collection := ps.Expression()
 		ps.consume(tokenizer.VBAR)
 		arg := []Node{collection}
 		return &FunctionalNode{arguments: arg, operator: "len", Line: line}
-	}
-	if ps.match(tokenizer.TRUE) {
+	case ps.match(tokenizer.TRUE):
 		return &Boolean{value: true}
-	}
-	if ps.match(tokenizer.FALSE) {
+	case ps.match(tokenizer.FALSE):
 		return &Boolean{value: false}
-	}
-	if ps.get(0).Type == tokenizer.NAME &&
-		ps.get(1).Type == tokenizer.LPAR {
-		//contains(__reservedKeywords, current.Lexeme) {
+	case ps.lookahead(0, tokenizer.NAME) && ps.lookahead(1, tokenizer.LPAR):
 		return ps.Function()
-	}
-	if ps.match(tokenizer.NAME) {
+	case ps.match(tokenizer.NAME):
 		return &ScopeVar{Name: current.Lexeme, Line: line}
+	default:
+		panic("parsing fatal: error unknown terminal")
 	}
-
-	panic("WTF")
 }

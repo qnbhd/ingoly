@@ -24,7 +24,7 @@ func (ps *Parser) match(tokenType tokenizer.TokenType) bool {
 	return true
 }
 
-func (ps *Parser) consume(tokenType tokenizer.TokenType) (tokenizer.Token, error) {
+func (ps *Parser) consume(tokenType tokenizer.TokenType) tokenizer.Token {
 	current := ps.get(0)
 	err := errors.New("parsing: " + tokenType.String() + " was expected")
 
@@ -32,10 +32,10 @@ func (ps *Parser) consume(tokenType tokenizer.TokenType) (tokenizer.Token, error
 		line := ps.get(0).Line
 		inn := errpull.NewInnerError(err, line)
 		ps.ErrorsPull.Errors = append(ps.ErrorsPull.Errors, inn)
-		return tokenizer.Token{Type: tokenizer.NIL}, err
+		return tokenizer.Token{Type: tokenizer.NIL}
 	}
 	ps.pos++
-	return current, nil
+	return current
 }
 
 func (ps *Parser) get(relativePosition int) tokenizer.Token {
@@ -44,4 +44,8 @@ func (ps *Parser) get(relativePosition int) tokenizer.Token {
 		return tokenizer.Token{Type: tokenizer.EOF, Lexeme: ""}
 	}
 	return ps.Tokens[position]
+}
+
+func (ps *Parser) lookahead(relativePosition int, tokenType tokenizer.TokenType) bool {
+	return ps.get(relativePosition).Type == tokenType
 }

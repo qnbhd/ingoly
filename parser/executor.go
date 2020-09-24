@@ -1464,8 +1464,7 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *ClassAccess:
-
-		getted := w.mainContext.Vars[s.structName]
+		getted := w.currentContext.Vars[s.structName]
 
 		switch st := getted.(type) {
 		case *ClassScope:
@@ -1475,6 +1474,9 @@ func (w Executor) EnterNode(n Node) bool {
 			w.CreatePullError(err, s.Line)
 		}
 
+		return false
+
+	case *Class:
 		return false
 
 	}

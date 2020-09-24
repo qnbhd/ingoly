@@ -34,18 +34,14 @@ func (ps *Parser) AssignNode() Node {
 		variable := ps.get(0).Lexeme
 		ps.match(tokenizer.NAME)
 
-		_, ok := ps.consume(tokenizer.COLONEQUAL)
-		if ok == nil {
-			return &DeclarationNode{Variable: variable, Expression: ps.Expression(), Line: line}
-		}
+		ps.consume(tokenizer.COLONEQUAL)
+		return &DeclarationNode{Variable: variable, Expression: ps.Expression(), Line: line}
 	} else if ps.get(0).Type == tokenizer.NAME && ps.get(1).Type == tokenizer.EQUAL {
 		line := ps.get(0).Line
 		variable := ps.get(0).Lexeme
 		ps.consume(tokenizer.NAME)
-		_, ok := ps.consume(tokenizer.EQUAL)
-		if ok == nil {
-			return &AssignNode{Variable: variable, Expression: ps.Expression(), Line: line}
-		}
+		ps.consume(tokenizer.EQUAL)
+		return &AssignNode{Variable: variable, Expression: ps.Expression(), Line: line}
 	}
 
 	return ps.Expression()
@@ -84,7 +80,7 @@ func (ps *Parser) IfElseBlock() Node {
 func (ps *Parser) ForBlock() Node {
 	line := ps.get(0).Line
 
-	iterVar, _ := ps.consume(tokenizer.NAME)
+	iterVar := ps.consume(tokenizer.NAME)
 	ps.consume(tokenizer.IN)
 	ps.consume(tokenizer.LSQB)
 
@@ -140,8 +136,8 @@ func (ps *Parser) FuncDeclaration() Node {
 	var argNames []VarWithAnnotation
 
 	for !ps.match(tokenizer.RPAR) {
-		varName, _ := ps.consume(tokenizer.NAME)
-		varAnnotation, _ := ps.consume(tokenizer.NAME)
+		varName := ps.consume(tokenizer.NAME)
+		varAnnotation := ps.consume(tokenizer.NAME)
 		resultVar := VarWithAnnotation{varName.Lexeme, varAnnotation.Lexeme}
 		ps.match(tokenizer.COMMA)
 		argNames = append(argNames, resultVar)
@@ -151,7 +147,7 @@ func (ps *Parser) FuncDeclaration() Node {
 
 	if ps.get(0).Type == tokenizer.ARROW {
 		ps.consume(tokenizer.ARROW)
-		res, _ := ps.consume(tokenizer.NAME)
+		res := ps.consume(tokenizer.NAME)
 		returnAnnotation = res.Lexeme
 	}
 
@@ -172,7 +168,7 @@ func (ps *Parser) ReturnStmt() Node {
 }
 
 func (ps *Parser) Array() Node {
-	res, _ := ps.consume(tokenizer.LSQB)
+	res := ps.consume(tokenizer.LSQB)
 	line := res.Line
 	var elements []Node
 
@@ -186,7 +182,7 @@ func (ps *Parser) Array() Node {
 }
 
 func (ps *Parser) ArrayElement() Node {
-	res, _ := ps.consume(tokenizer.NAME)
+	res := ps.consume(tokenizer.NAME)
 	varName := res.Lexeme
 	ps.consume(tokenizer.LSQB)
 	idx := ps.Expression()
@@ -196,15 +192,14 @@ func (ps *Parser) ArrayElement() Node {
 }
 
 func (ps *Parser) ClassDeclaring() Node {
-	ps.consume(tokenizer.STRUCT)
-	name, _ := ps.consume(tokenizer.NAME)
+	name := ps.consume(tokenizer.NAME)
 	ps.consume(tokenizer.LBRACE)
 
 	var fields []VarWithAnnotation
 	for !ps.match(tokenizer.RBRACE) {
-		varName, _ := ps.consume(tokenizer.NAME)
+		varName := ps.consume(tokenizer.NAME)
 
-		varAnnotation, _ := ps.consume(tokenizer.NAME)
+		varAnnotation := ps.consume(tokenizer.NAME)
 		resultVar := VarWithAnnotation{varName.Lexeme, varAnnotation.Lexeme}
 		fields = append(fields, resultVar)
 	}
@@ -219,9 +214,9 @@ func (ps *Parser) ClassDeclaring() Node {
 
 func (ps *Parser) ClassAccess() Node {
 	line := ps.get(0).Line
-	structName, _ := ps.consume(tokenizer.NAME)
-	_, _ = ps.consume(tokenizer.DOT)
-	structField, _ := ps.consume(tokenizer.NAME)
+	structName := ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.DOT)
+	structField := ps.consume(tokenizer.NAME)
 	return &ClassAccess{
 		structName:  structName.Lexeme,
 		structField: structField.Lexeme,

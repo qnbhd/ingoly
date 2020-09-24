@@ -1,7 +1,17 @@
-require @builtins.math
+# require @builtins.math
 
-declare sin2x(x float) -> float {
-    return sin(2*x)
+struct Vector {
+    x int
+    y int
 }
 
-println(sin2x(0.5))
+declare add_vectors(a Vector, b Vector) -> Vector {
+    return Vector(a.x + b.x, a.y + b.y)
+}
+
+var vec1 := Vector(1, 5)
+var vec2 := Vector(3, 7)
+
+var vec3 := add_vectors(vec1, vec2)
+print(vec3)
+

@@ -52,27 +52,23 @@ func (ps *Parser) Conditional() Node {
 	for {
 		line := ps.get(0).Line
 
-		if ps.match(tokenizer.LESS) {
+		switch {
+		case ps.match(tokenizer.LESS):
 			result = &ConditionalNode{"<", result, ps.Additive(), line}
 			continue
-		}
-		if ps.match(tokenizer.GREATER) {
+		case ps.match(tokenizer.GREATER):
 			result = &ConditionalNode{">", result, ps.Additive(), line}
 			continue
-		}
-		if ps.match(tokenizer.EQEQUAL) {
+		case ps.match(tokenizer.EQEQUAL):
 			result = &ConditionalNode{"==", result, ps.Additive(), line}
 			continue
-		}
-		if ps.match(tokenizer.LESSEQUAL) {
+		case ps.match(tokenizer.LESSEQUAL):
 			result = &ConditionalNode{"<=", result, ps.Additive(), line}
 			continue
-		}
-		if ps.match(tokenizer.GREATEREQUAL) {
+		case ps.match(tokenizer.GREATEREQUAL):
 			result = &ConditionalNode{">=", result, ps.Additive(), line}
 			continue
-		}
-		if ps.match(tokenizer.NOTEQUAL) {
+		case ps.match(tokenizer.NOTEQUAL):
 			result = &ConditionalNode{"!=", result, ps.Additive(), line}
 			continue
 		}
