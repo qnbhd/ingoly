@@ -1,15 +1,32 @@
-// require @builtins.math
-
 class People {
 
     firstName string
     lastName string
     old int
 
-    declare People(firstName string, lastName string, int old) {
-        this.firstName = firstName
-        this.lastName = lastName
-        this.old = old
+    declare print() {
+         println(this.firstName, this.lastName, this.old)
+    }
+
+    declare get_first_name() -> string {
+        return this.firstName
+    }
+
+    declare get_last_name() -> string {
+        return this.lastName
+    }
+
+    declare get_old() -> int {
+        return this.old
     }
 
 }
+
+var kostya := People("Kostya", "Templin", 20)
+
+var first_name := kostya.get_first_name()
+var last_name := kostya.get_last_name()
+var old := kostya.get_old()
+
+println("Separated: ", first_name, last_name, old)
+kostya.print()

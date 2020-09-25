@@ -6,7 +6,6 @@ import (
 	"ingoly/errpull"
 	"math"
 	"math/rand"
-	"reflect"
 	"strings"
 )
 
@@ -49,10 +48,6 @@ func (w *Executor) switchMainContext() {
 	w.currentContext = w.mainContext
 }
 
-func typeof(v interface{}) string {
-	return reflect.TypeOf(v).String()
-}
-
 type InterruptionsPull struct {
 	interruptions []string
 }
@@ -66,17 +61,21 @@ const (
 )
 
 type Executor struct {
-	currentContext    *Context
-	mainContext       *Context
-	Stack             *Stack
-	ErrorsPull        *errpull.ErrorsPull
-	lastStructLabel   string
-	interruptionsPull *InterruptionsPull
+	currentContext     *Context
+	currentClassObject string
+	currentClass       string
+	mainContext        *Context
+	Stack              *Stack
+	ErrorsPull         *errpull.ErrorsPull
+	lastStructLabel    string
+	interruptionsPull  *InterruptionsPull
 }
 
 func NewExecutor(ctx *Context) Executor {
 
 	return Executor{ctx,
+		"",
+		"",
 		ctx,
 		NewStack(),
 		errpull.NewErrorsPull(),
@@ -1490,7 +1489,11 @@ func (w Executor) EnterNode(n Node) bool {
 		return false
 
 	case *ClassAccessRHS:
-		getted := w.currentContext.Vars[s.structName]
+		getted := w.mainContext.Vars[s.structName]
+
+		if w.currentClassObject != "" {
+			getted = w.mainContext.Vars[w.currentClassObject]
+		}
 
 		switch st := getted.(type) {
 		case *ClassScope:
@@ -1505,6 +1508,43 @@ func (w Executor) EnterNode(n Node) bool {
 	case *Class:
 		return false
 
+	case *Ref:
+		s.nodeRef.Walk(w)
+		return false
+
+	case *ClassScopeMethodAccess:
+
+		for _, arg := range s.arguments {
+			arg.Walk(w)
+		}
+
+		objToCall := w.currentContext.Vars[s.objName]
+		var className string
+
+		switch called := objToCall.(type) {
+		case *ClassScope:
+			className = called.Name
+		default:
+			return false
+		}
+
+		w.currentClass = className
+		w.currentClassObject = s.objName
+
+		functor, ok := w.currentContext.ClassesMethods[className][s.methodToExecute]
+
+		if !ok {
+			return false
+		}
+
+		functor(w, s, len(s.arguments), s.Line)
+
+		w.currentClass = ""
+		w.currentClassObject = ""
+
+		w.ClearStackLastNil()
+
+		return false
 	}
 
 	return true

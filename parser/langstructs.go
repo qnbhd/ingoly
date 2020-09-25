@@ -258,5 +258,23 @@ func (ps *Parser) ClassAccess() Node {
 }
 
 func (ps *Parser) ClassMethod() Node {
-	return &Nil{}
+	className := ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.DOT)
+	methodToExecute := ps.consume(tokenizer.NAME)
+	ps.consume(tokenizer.LPAR)
+
+	var args []Node
+	res := ClassScopeMethodAccess{
+		objName:         className.Lexeme,
+		methodToExecute: methodToExecute.Lexeme,
+		arguments:       args,
+		Line:            className.Line,
+	}
+
+	for !ps.match(tokenizer.RPAR) {
+		res.arguments = append(res.arguments, ps.Expression())
+		ps.match(tokenizer.COMMA)
+	}
+
+	return &res
 }

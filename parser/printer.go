@@ -249,6 +249,17 @@ func (w Printer) EnterNode(n Node) bool {
 		w.IndentLevel++
 		s.stmt.Walk(w)
 		return false
+
+	case *ClassScopeMethodAccess:
+		defaultInfoPrint(color.Magenta, s.Line,
+			fmt.Sprintf("Var '%s' Executing Method '%s'", s.objName, s.methodToExecute))
+
+		w.IndentLevel++
+		for _, item := range s.arguments {
+			item.Walk(w)
+		}
+
+		return false
 	}
 
 	return true

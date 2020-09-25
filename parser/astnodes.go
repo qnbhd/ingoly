@@ -395,3 +395,36 @@ func (ss *ClassAccessLHS) Walk(v Visitor) {
 
 	v.LeaveNode(ss)
 }
+
+type ClassScopeMethodAccess struct {
+	objName         string
+	methodToExecute string
+	arguments       []Node
+	Line            int
+}
+
+func (cs *ClassScopeMethodAccess) Walk(v Visitor) {
+	if !v.EnterNode(cs) {
+		return
+	}
+
+	for _, item := range cs.arguments {
+		item.Walk(v)
+	}
+
+	v.LeaveNode(cs)
+}
+
+type Ref struct {
+	nodeRef Node
+}
+
+func (ref *Ref) Walk(v Visitor) {
+	if !v.EnterNode(ref) {
+		return
+	}
+
+	ref.nodeRef.Walk(v)
+
+	v.LeaveNode(ref)
+}

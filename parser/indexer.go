@@ -9,7 +9,7 @@ import (
 
 type Indexer struct {
 	Ctx          *Context
-	currentClass string
+	CurrentClass string
 }
 
 var (
@@ -34,10 +34,10 @@ func NewIndexer() *Indexer {
 	newCtx.Functions["string"] = __TypeCastingString
 	newCtx.Functions["len"] = __InBoxLen
 
-	return &Indexer{Ctx: newCtx, currentClass: ""}
+	return &Indexer{Ctx: newCtx, CurrentClass: ""}
 }
 
-func (w Indexer) EnterNode(n Node) bool {
+func (v Indexer) EnterNode(n Node) bool {
 
 	switch curNode := n.(type) {
 	case *FunctionDeclareNode:
@@ -54,10 +54,9 @@ func (w Indexer) EnterNode(n Node) bool {
 			// TODO general access
 			functionCtx.Functions = w.mainContext.Functions
 
-			flagCorrectAnnotations := true
 			for _, arg := range curNode.args {
 				_receivedArg, _ := w.Stack.Pop()
-				_receivedArgType := typeof(_receivedArg)[len("*parser."):]
+				_receivedArgType := typeof(_receivedArg)
 
 				needed := arg.Annotation
 				getted := bijectionAnnotationTypes[_receivedArgType]
@@ -75,78 +74,81 @@ func (w Indexer) EnterNode(n Node) bool {
 							fmt.Sprintf("invalid type of argument '%s' (expected %s, getted %s)",
 								arg.Name, needed, getted))
 						w.CreatePullError(err, curNode.Line)
-						flagCorrectAnnotations = false
+						return
 					}
 				}
 				functionCtx.Vars[arg.Name] = _receivedArg
 			}
 
-			if flagCorrectAnnotations {
+			w.currentContext = functionCtx
 
-				w.currentContext = functionCtx
+			curNode.body.Walk(w)
+			returnValue, ok := w.Stack.Pop()
 
-				curNode.body.Walk(w)
-				returnValue, ok := w.Stack.Pop()
-
-				for idx, interrupt := range w.interruptionsPull.interruptions {
-					if strings.Contains(interrupt, functionLabel) {
-						w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
-					}
+			for idx, interrupt := range w.interruptionsPull.interruptions {
+				if strings.Contains(interrupt, functionLabel) {
+					w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
 				}
-
-				w.lastStructLabel = ""
-
-				returnedValueAnnotation := "*parser.Nil"
-				_retArgType := ""
-				getted := ""
-
-				if ok {
-					returnValue.Walk(w)
-					result, _ := w.Stack.Pop()
-					returnedValueAnnotation = typeof(result)
-
-					switch __rectype := result.(type) {
-					case *ClassScope:
-						getted = __rectype.Name
-					default:
-						_retArgType = returnedValueAnnotation[len("*parser."):]
-						getted = bijectionAnnotationTypes[_retArgType]
-					}
-
-					w.Stack.Push(result)
-				} else {
-					w.Stack.Push(&Nil{Line: line})
-				}
-
-				needed := curNode.returnAnnotation
-
-				if needed != getted {
-					err := errors.New(
-						fmt.Sprintf("invalid type of return value in function '%s' (expected %s, getted %s)",
-							curNode.name, curNode.returnAnnotation, bijectionAnnotationTypes[_retArgType]))
-					w.CreatePullError(err, curNode.Line)
-				}
-
-				w.switchMainContext()
 			}
 
+			w.lastStructLabel = ""
+
+			returnedValueAnnotation := "Nil"
+			_retArgType := ""
+			getted := ""
+
+			if ok {
+				returnValue.Walk(w)
+				result, _ := w.Stack.Pop()
+				returnedValueAnnotation = typeof(result)
+
+				switch __rectype := result.(type) {
+				case *ClassScope:
+					getted = __rectype.Name
+				default:
+					_retArgType = returnedValueAnnotation
+					getted = bijectionAnnotationTypes[_retArgType]
+				}
+
+				w.Stack.Push(result)
+			} else {
+				getted = "nil"
+				w.Stack.Push(&Nil{Line: line})
+			}
+
+			needed := curNode.returnAnnotation
+
+			if needed != getted {
+				err := errors.New(
+					fmt.Sprintf("invalid type of return value in function '%s' (expected %s, getted %s)",
+						curNode.name, curNode.returnAnnotation, bijectionAnnotationTypes[_retArgType]))
+				w.CreatePullError(err, curNode.Line)
+			}
+
+			w.switchMainContext()
+
 		}
-		if w.currentClass != "" {
-			w.Ctx.ClassesMethods[w.currentClass][curNode.name] = functor
+
+		if v.CurrentClass != "" {
+			v.Ctx.ClassesMethods[v.CurrentClass][curNode.name] = functor
 			return false
 		}
-		w.Ctx.Functions[curNode.name] = functor
+		v.Ctx.Functions[curNode.name] = functor
+		return false
 
 	case *Class:
 
-		w.currentClass = curNode.className
-		w.Ctx.Classes[curNode.className] = curNode.fields
-		w.Ctx.Functions[curNode.className] = func(w Executor, opNode Node, argCount, line int) {
+		v.CurrentClass = curNode.className
+		v.Ctx.Classes[curNode.className] = curNode.fields
+		v.Ctx.Functions[curNode.className] = func(w Executor, opNode Node, argCount, line int) {
 
 			var Fields []VarWithAnnotation
 			for _, item := range curNode.fields {
 				Fields = append(Fields, item)
 			}
+
+			methodLabel := fmt.Sprintf("__method%d", rand.Int())
+			w.lastStructLabel = methodLabel
 
 			reverseAny(Fields)
 
@@ -154,7 +156,7 @@ func (w Indexer) EnterNode(n Node) bool {
 
 			for _, arg := range Fields {
 				_receivedArg, _ := w.Stack.Pop()
-				_receivedArgType := typeof(_receivedArg)[len("*parser."):]
+				_receivedArgType := typeof(_receivedArg)
 
 				needed := arg.Annotation
 				getted := bijectionAnnotationTypes[_receivedArgType]
@@ -174,21 +176,29 @@ func (w Indexer) EnterNode(n Node) bool {
 				newStruct[arg.Name] = simplified
 			}
 
-			//w.mainContext.Vars[curNode.className] = &ClassScope{newStruct, line}
+			for idx, interrupt := range w.interruptionsPull.interruptions {
+				if strings.Contains(interrupt, methodLabel) {
+					w.interruptionsPull.interruptions = append(w.interruptionsPull.interruptions[:idx], w.interruptionsPull.interruptions[idx+1:]...)
+				}
+			}
 
-			w.Stack.Push(&ClassScope{curNode.className, newStruct, line})
+			//w.mainContext.Vars[curNode.objName] = &ClassScope{newStruct, line}
+
+			scope := ClassScope{curNode.className, newStruct, line}
+			scope.fields["this"] = &Ref{&scope}
+
+			w.Stack.Push(&scope)
 
 		}
 
-		w.Ctx.ClassesMethods[curNode.className] = make(map[string]func(w Executor, curNode Node, argCount, line int))
+		v.Ctx.ClassesMethods[curNode.className] = make(map[string]func(w Executor, curNode Node, argCount, line int))
 
 		for _, item := range curNode.methods {
-			item.Walk(w)
+			item.Walk(v)
 		}
 
-		w.currentClass = ""
+		v.CurrentClass = ""
 
-		fmt.Println(w.Ctx.ClassesMethods["People"])
 		return false
 	}
 
